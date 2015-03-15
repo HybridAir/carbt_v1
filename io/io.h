@@ -11,7 +11,10 @@
 class io {
     public:
         io();
+        void doled();
     private:
+
 };
+
 
 #endif
