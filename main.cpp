@@ -1,5 +1,7 @@
-#include "mbed.h"
+//watch me as I try to figure out what the hell this thing is going to do
+#include <mbed.h>
 #include "TextLCD.h"
+#include "io.h"
 
 Serial pc(USBTX, USBRX); // tx, rx
 Serial bt(PA_11, PA_12); // tx, rx
