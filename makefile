@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-PROJECT         := MusicControl
+PROJECT         := carbt_v1
 DEVICES         := NUCLEO_F401RE
 #GCC4MBED_DIR    := ../..
 GCC4MBED_DIR    := C:/nucleo/gcc4mbed
