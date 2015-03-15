@@ -8,7 +8,7 @@ XS3868::XS3868() {
 
 }
 
-void ;XS3868::init() {
+void XS3868::init() {
 	sbt.baud(115200);
 	sbt.printf("AT#CZ\n\r");
 	wait(3);
