@@ -6,6 +6,8 @@
 class XS3868 {
     public:
 		XS3868();
+		void connect();
+		void init();
     private:
 };
 
