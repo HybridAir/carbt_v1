@@ -1,6 +1,9 @@
 //so this is the library I'm assuming was provided by the maker of the qn8027 ic
 //I'm currently trying to figure out how the fuck it's supposed to work
 //and then make it work
+//and then make it actually usable because the original programmer was a moron
+//I'm going to have to make my own library, this is garbage
+//but understandable
 
 #include "qndriver.h"
 
@@ -310,6 +313,7 @@ void QND_SetSysMode(UINT16 mode)
         //set the third bit in the SYSTEM address to 0, sets the device to IDLE mode (TXREQ 0)
         break;
     default:		//this default looks like garbage tbh
+    	//shouldn't need any of this
             val = (UINT8)(mode >> 8);
             if (val)
             {
@@ -349,6 +353,8 @@ Parameters:
 Return Value:
     None
 **********************************************************************/
+//I want to beat whoever programmed this
+//this is redundant
 void QND_TuneToCH(UINT16 ch)
 {
 
@@ -370,6 +376,8 @@ Set the chip used in specified country:
 Return Value:
     None
 **********************************************************************/
+//it wants a COUNTRY_CHINA, COUNTRY_USA, or COUNTRY_JAPAN (0-2)
+//this will restrict your allowed frequencies
 void QND_SetCountry(UINT8 country)
 {
 
@@ -451,6 +459,9 @@ for example:
   0x01,    //000001    122.5
   0x00     //000000    124
 **********************************************************************/
+//rf is witchcraft
+//this doesn't even apply to the qn8027
+//what the fuck satan
 void QND_TXSetPower( UINT8 gain)
 {
 
@@ -474,6 +485,8 @@ Parameters:
 Return Value:
   none
 **********************************************************************/
+//man I don't even
+//none of this seems to be right
 void QND_TXConfigAudio(UINT8 optiontype, UINT8 option )
 {
 

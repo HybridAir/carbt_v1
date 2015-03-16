@@ -217,7 +217,7 @@ typedef double         FP64;
 #define CH_STEP       0x00		//the address where the current channel lives? it's SYSTEM
 //so the channel is actually 10 bits long, the first 2 are stored in SYSTEM (CH_STEP), and the rest are in CH1 (CH)
 #define RDSD0         0x08
-#define PAG_CAL       0x1f
+#define PAG_CAL       0x1f		//a bitmask?
 #define CID2          0x06
 #define RDSEN         0x80
 #define TXREQ         0x20

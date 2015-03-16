@@ -1,10 +1,14 @@
-            #include "qndriver.h"
+      //fuck me
+//this seems to control I2C stuff
+
+#include "qndriver.h"
 #include "qnio.h"
 #define SPRINTF(a)
 
-UINT8 qnd_i2c;
-UINT8 qnd_i2c_timeout;
-UINT8 i2cMux = 0; //add this gloab temp to solve conflick of call timerRssicheck() and call 2-wire() at the same time
+UINT8 qnd_i2c;		//a global variable that does fuck all I guess
+UINT8 qnd_i2c_timeout;		//??????????
+UINT8 i2cMux = 0; //add this gloab temp to solve conflick of call timerRssicheck() and call 2-wire() at the same time  //not me
+//what the fuck even
 
 /*****************************************************************************************************
 ** Name:      Msdelay()
@@ -12,7 +16,8 @@ UINT8 i2cMux = 0; //add this gloab temp to solve conflick of call timerRssicheck
 *****************************************************************************************************/
 
 
-
+//no stop doing this
+//how about wait_ms(ms);
 void Msdelay(UINT16 dly)
 {
 
