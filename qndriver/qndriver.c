@@ -1,11 +1,21 @@
-            #include "qndriver.h"
+//so this is the library I'm assuming was provided by the maker of the qn8027 ic
+//I'm currently trying to figure out how the fuck it's supposed to work
+//and then make it work
 
+#include "qndriver.h"
+
+//the following two things are used to read and write from the device through i2c
 extern UINT8 QND_ReadReg(UINT8 adr);
+//this comes from qnio.c, it seems to read a specific i2c register address, and then return it
+
 extern UINT8 QND_WriteReg(UINT8 adr, UINT8 value);
+//like the above one, but it writes data to an i2c address instead of reading
 
 
-#define R_TXRX_MASK    0x20
-UINT8   qnd_Crystal = QND_CRYSTAL_DEFAULT;
+#define R_TXRX_MASK    0x20		//it's a bitmask used in QNF_SetRegBit for setting register bits
+//not sure why it's needed yet, but it's different in other versions of this code
+
+UINT8   qnd_Crystal = QND_CRYSTAL_DEFAULT;		//this is used to set the crystal type being used in the device, currently set to 0x2b
 UINT8   qnd_PrevMode;
 UINT8   qnd_Country  = COUNTRY_CHINA ;
 UINT16  qnd_CH_START = 7600;

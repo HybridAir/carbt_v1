@@ -17,7 +17,10 @@
 
 #define QND_REG_NUM_MAX   19  // for qn8027
 // crystal setting definition is not ready yet, please read datasheet to do setting accordingly
-#define QND_CRYSTAL_REG             0x03 //?
+
+//the crystal clock source setting requires bits 7-6 of the address
+//##xxxxxx
+#define QND_CRYSTAL_REG             0x03 			//this is the crystal/clock source setting i2c address (REG_XTL)
 #define QND_CRYSTAL_BIT_MASK        0x3f //?
 
 #define QND_CRYSTAL_24MHZ           0x2b //?
