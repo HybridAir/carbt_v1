@@ -6,7 +6,7 @@
 #define CCS_RX  0
 #define CCS_TX  1
 
-#define FREQ2CHREG(freq)   ((freq-7600)/5)
+#define FREQ2CHREG(freq)   ((freq-7600)/5)		//does some math on an input frequency
 #define CHREG2FREQ(ch)     (ch*5+7600)
 
 
@@ -19,12 +19,14 @@
 // crystal setting definition is not ready yet, please read datasheet to do setting accordingly
 
 //the crystal clock source setting requires bits 7-6 of the address
+//the other 6 bits (5-0) are used for oscillator current control, don't care about that
 //##xxxxxx
 #define QND_CRYSTAL_REG             0x03 			//this is the crystal/clock source setting i2c address (REG_XTL)
-#define QND_CRYSTAL_BIT_MASK        0x3f //?
+#define QND_CRYSTAL_BIT_MASK        0x3f 			//equal to 00111111, I am assuming the 1's are the bits being masked off, makes sense
 
-#define QND_CRYSTAL_24MHZ           0x2b //?
-#define QND_CRYSTAL_DEFAULT         QND_CRYSTAL_24MHZ
+#define QND_CRYSTAL_24MHZ           0x2b 			//equal to 00101011
+//I'm going to assume it's 00, meaning it's set to use the crystal on x1/x2, but hell if I know
+#define QND_CRYSTAL_DEFAULT         QND_CRYSTAL_24MHZ	//above
 
 
 
@@ -51,9 +53,14 @@
 #define QND_OUTPUT_IIS        1
 
 // stereo mode
-#define QND_TX_AUDIO_MONO              0x10
-#define QND_TX_AUDIO_STEREO            0x00
+//the following are used to set the device to MONO or STEREO rx/tx mode
+//the QN8027 only has tx so forget about rx right now
+//the following two are both correct
+//1 is mono, 0 is stereo
+#define QND_TX_AUDIO_MONO              0x10		//00010000
+#define QND_TX_AUDIO_STEREO            0x00		//00000000
 
+//don't care about these two, they dont apply to me
 #define QND_RX_AUDIO_MONO              0x20
 #define QND_RX_AUDIO_STEREO            0x00
 
@@ -202,16 +209,19 @@ typedef double         FP64;
 #define QND_LOGB(a,b)
 #define QND_LOGHEX(a,b)
 #define _QNREG_H_
+
+//the following two are the same address, for SYSTEM
 #define SYSTEM1       0x00
 #define SYSTEM2       0x00
-#define CH            0x01
-#define CH_STEP       0x00
+#define CH            0x01		//the CH1 address, the channel lives here?
+#define CH_STEP       0x00		//the address where the current channel lives? it's SYSTEM
+//so the channel is actually 10 bits long, the first 2 are stored in SYSTEM (CH_STEP), and the rest are in CH1 (CH)
 #define RDSD0         0x08
 #define PAG_CAL       0x1f
 #define CID2          0x06
 #define RDSEN         0x80
 #define TXREQ         0x20
-#define CH_CH         0x03
+#define CH_CH         0x03		//a bitmask used for isolating the last two bits, used to get the current channel out of SYSTEM
 #define RDSTXRDY      0x04
 #define TX_FDEV       0x11  // FDEV on datasheet
 #define _QNSYS_H_

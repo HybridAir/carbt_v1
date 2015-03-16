@@ -5,6 +5,7 @@
 #include "qndriver.h"
 
 //the following two things are used to read and write from the device through i2c
+//the following two are prototypes (I think) for two functions below
 extern UINT8 QND_ReadReg(UINT8 adr);
 //this comes from qnio.c, it seems to read a specific i2c register address, and then return it
 
@@ -16,11 +17,15 @@ extern UINT8 QND_WriteReg(UINT8 adr, UINT8 value);
 //not sure why it's needed yet, but it's different in other versions of this code
 
 UINT8   qnd_Crystal = QND_CRYSTAL_DEFAULT;		//this is used to set the crystal type being used in the device, currently set to 0x2b
-UINT8   qnd_PrevMode;
-UINT8   qnd_Country  = COUNTRY_CHINA ;
-UINT16  qnd_CH_START = 7600;
-UINT16  qnd_CH_STOP  = 10800;
-UINT8   qnd_CH_STEP  = 1;
+UINT8   qnd_PrevMode;					//it isn't used anywhere so I guess ignore it
+
+
+UINT8   qnd_Country  = COUNTRY_CHINA ;		//used to set the frequency limits based on the country of operation (boring FCC stuff)
+UINT16  qnd_CH_START = 7600;				//the beginning of the allowed channel range
+UINT16  qnd_CH_STOP  = 10800;				//the ending
+UINT8   qnd_CH_STEP  = 1;					//I'm assuming this is how many spaces in between a channel (like 88.7, 88.9, etc)
+//the above three vars are already defined below somewhere, so I don't know why they're doing it here
+//it needs to be set to USA settings
 
 
 
@@ -37,15 +42,29 @@ Parameters:
 Return Value:
     None
 **********************************************************************/
+//ok so, this thing is used to set a bit within a specific register
 void QNF_SetRegBit(UINT8 reg, UINT8 bitMask, UINT8 data_val)
 {
 
-    UINT8 temp;
-    temp = QND_ReadReg(reg);
-    temp &= (UINT8)(~bitMask);
-    temp |= data_val & bitMask;
+    UINT8 temp;					//temporary internal variable
+
+    temp = QND_ReadReg(reg);		//get register's current value
+
+    temp &= (UINT8)(~bitMask);		//fucking
+    //it looks like we are doing a bitwise AND here
+    //so take the value we got from before, and AND it with the bitmask
+    //this lets us only modify a specific bit (bits?) of that data we got
+
+    temp |= data_val & bitMask;		//ugh why the fuck
+    //ok so the ANDed value we got from before is now being ORed with the data_val and bitmask ANDed together
+
 //    temp |= data_val;
-    QND_WriteReg(reg, temp);
+    //I didn't comment this above thing out, so I guess they didn't like it
+
+    QND_WriteReg(reg, temp);			//write that fixed data to the register we wanted finally
+    //kill me
+
+    //this needs an exmaple
 
 }
 
@@ -59,6 +78,7 @@ Parameters:
 Return Value:
     channel frequency
 **********************************************************************/
+//it does what it says, and returns some weird looking thing
 UINT16 QNF_GetCh()
 {
 
@@ -66,12 +86,31 @@ UINT16 QNF_GetCh()
     UINT8  tStep;
     UINT16 ch = 0;
     // set to reg: CH_STEP
-    tStep = QND_ReadReg(CH_STEP);
-    tStep &= CH_CH;
-    ch  =  tStep ;
-    tCh= QND_ReadReg(CH);
-    ch = (ch<<8)+tCh;
-    return CHREG2FREQ(ch);
+    tStep = QND_ReadReg(CH_STEP);			//read out everything in the SYSTEM address
+    tStep &= CH_CH;							//AND it with the current channel bitmask
+    ch  =  tStep ;							//ch is now what we got above
+    tCh= QND_ReadReg(CH);					//now we're reading out whatever is in the CH1 address
+    ch = (ch<<8)+tCh;						//remember that thing we anded before? now we're fucking
+    //shifiting it left 8 bits, and adding tCh to it
+
+    return CHREG2FREQ(ch);		//we're finally done
+
+    //EXAMPLE
+    //CH_STEP = 00000000 //this is the register
+    //CH_CH =  00000011 //this is the bitmask for the above register that we want
+    //CH = 00000001 //another bitmask
+
+    //tStep = read(CH_STEP) //lets say we get 00000011 out of it
+    //tStep &= CH_CH = 00000011 & 00000011 = 11 //so we got the last two bits we wanted out
+    //ch  =  tStep; ch = 11 //self explanatory
+    //tCh= read(CH = 00000001); //this reads out of CH1, lets say it gives us 10101010
+    //ch = (ch<<8)+tCh; //so we shift 11 8 bits left, then add 10101010 to it
+    //so we get 1100000000, and then add 10101010, finally giving us 1110101010
+    //so was the first stuff actually fucking necessary
+    //whatever, it gets the current channel out from SYSETM and CH1, and should work
+
+    //so all we are doing it getting the last two bits out of SYSTEM, and putting them in front of everything in CH1
+    //giving us 10 bits
 
 }
 
@@ -85,24 +124,42 @@ Parameters:
 Return Value:
     1: success
 **********************************************************************/
+//sets the frequency, needs the frequency as a 2 byte int
 UINT8 QNF_SetCh(UINT16 freq)
 {
 
-    // calculate ch parameter used for register setting
+    // calculate ch parameter used for register setting //not me
     UINT8 tStep;
     UINT8 tCh;
     UINT16 f;
-        f = FREQ2CHREG(freq);
-        // set to reg: CH
-        tCh = (UINT8) f;
-        QND_WriteReg(CH, tCh);
-        // set to reg: CH_STEP
-        tStep = QND_ReadReg(CH_STEP);
-        tStep &= ~CH_CH;
-        tStep |= ((UINT8) (f >> 8) & CH_CH);
-        QND_WriteReg(CH_STEP, tStep);
+        f = FREQ2CHREG(freq);		//do math on the input frequency ((freq-7600)/5) found in the .h
+        //i guess we are converting the frequency to something nicer?
 
-    return 1;
+        // set to reg: CH //not me
+        tCh = (UINT8) f;		//cast the above result to an 8 bit int, cutting off everything in front
+        QND_WriteReg(CH, tCh);	//write the data above to address CH1
+        // set to reg: CH_STEP //not me
+
+        //now we need to write out the top 2 bits to SYSTEM (since there are 10 total)
+        tStep = QND_ReadReg(CH_STEP);		//read out all the data in the SYSTEM address
+        tStep &= ~CH_CH;		//AND the data we got with the NOTed SYSTEM bitmask
+        tStep |= ((UINT8) (f >> 8) & CH_CH);		//OR the above result with (the converted frequency above shifted right 8, ANDed with CH_CH)
+        QND_WriteReg(CH_STEP, tStep);		//write the remaining clusterfuck to it's proper place
+
+    return 1;			//return 1 for some dumb reason
+
+    //EXAMPLE
+    //lets say we want to change the channel to 99.1 mhz
+    //convert it to 9910 = 10011010110110
+
+    //f = 462
+    //tCh = 206 //since 111001110 to UINT8 = 11001110
+    //QND_WriteReg(0x01, 206);
+
+    //tStep = lets say 00000010
+    //tStep = 00000010 AND 11111100 (~00000011 aka 0x03 aka CH_CH) = 0
+    //tStep = 0 OR 1 (1 AND 00000011 = 1, converted to UINT8) = 1
+    //QND_WriteReg(0x00, 00000001);  //this is right
 
 }
 
@@ -125,6 +182,10 @@ void QNF_SetAudioMono(UINT8 modemask, UINT8 mode)
 {
 
     QNF_SetRegBit(SYSTEM2,modemask, mode);
+    //SYSTEM2 is the same address as SYSTEM1, I guess the original programmer was a little high
+    //modemask should always be 00010000, that's the only bit that applies
+    //mode can be either QND_TX_AUDIO_MONO or QND_TX_AUDIO_STEREO (0x10 or 0x00)
+    //this one is easy
 
 }
 
@@ -140,21 +201,25 @@ Return Value:
         None
 
 **********************************************************************/
+//used for delaying?
+//need to put my own code in here
 void QND_Delay(UINT16 ms)
 {
 
-    UINT16 i,k;
-    for(i=0; i<3000;i++)
-    {
+	wait_ms(ms);		//there we go
 
-        for(k=0; k<ms; k++)
-        {
-
-
-
-}
-
-}
+//    UINT16 i,k;
+//    for(i=0; i<3000;i++)
+//    {
+//
+//        for(k=0; k<ms; k++)
+//        {
+//
+//
+//
+//}
+//
+//}
 
 }
 
@@ -168,19 +233,23 @@ Parameters:
 Return Value:
     None
 **********************************************************************/
+//this resets and recalibrates the device, don't call it by itself (use QND_Init())
 void QN_ChipInitialization()
 {
 
     // reset
-    QND_WriteReg(0x00,0x80);
-    QND_Delay(20);
-    //to be customized: change the crystal setting, according to HW design
+    QND_WriteReg(0x00,0x80);		//tell the device to reset to all default values (SWRST 1)
+    QND_Delay(20);					//delay 20 ms for some reason
+    //to be customized: change the crystal setting, according to HW design	//not me
     //.........
     //recalibration
-    QNF_SetRegBit(0x00,0x40,0x40);
-    QNF_SetRegBit(0x00,0x40,0x00);
+    QNF_SetRegBit(0x00,0x40,0x40);	//reset the FSM (RECAL 1)
+    QNF_SetRegBit(0x00,0x40,0x00);	//done resetting the FSM (RECAL 0)
     QND_Delay(20);                //delay 20 ms
-    QND_WriteReg(0x18,0xe4);        //reset
+
+    //the following two are not even in the datasheet
+    //leave the alone I guess
+    QND_WriteReg(0x18,0xe4);        //reset //not me
     QND_WriteReg(0x1b,0xf0);
     //Done chip recalibration
 
@@ -197,13 +266,14 @@ Return Value:
     1: Device is ready to use.
     0: Device is not ready to serve function.
 **********************************************************************/
+//initalizes the device
 UINT8 QND_Init()
 {
 
     QN_ChipInitialization();
 //    QND_WriteReg(0x00,  0x01); //resume original status of chip /* 2008 06 13 */
     return 1;
-
+//is that seriously it
 }
 
 /**********************************************************************
@@ -225,17 +295,21 @@ Parameters:
 Return Value:
     None
 **********************************************************************/
+//ok so this is basically used to set IDLE mode
+//either we're sleeping (IDLE) or we're awake (transmitting)
+//we can only give it QND_MODE_SLEEP or QND_MODE_WAKEUP
 void QND_SetSysMode(UINT16 mode)
 {
 
     UINT8 val;
-    switch(mode)
+    switch(mode)		//switch depending on the input mode (0-2 it seems)
     {
 
-    case QND_MODE_SLEEP:                       //set sleep mode
+    case QND_MODE_SLEEP:                       //set sleep mode //not me
         QNF_SetRegBit(SYSTEM1, R_TXRX_MASK, 0);
+        //set the third bit in the SYSTEM address to 0, sets the device to IDLE mode (TXREQ 0)
         break;
-    default:
+    default:		//this default looks like garbage tbh
             val = (UINT8)(mode >> 8);
             if (val)
             {
