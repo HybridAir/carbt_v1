@@ -10,8 +10,10 @@ QN8027::QN8027() {
 
 }
 
+
 //used to set certain bits to a specific address, based off of QNF_SetRegBit
 //wants the address, the bitmask, and the value
+//wait cant I use this for everything
 void QN8027::setBit(char address, char bitmask, char value) {
 	char outval;												//prepare the var for use
 	i2c.read(address, outval, 8);								//read 8 bits of data in the specified address into outval
@@ -29,6 +31,7 @@ void QN8027::setBit(char address, char bitmask, char value) {
 	//i2cwrite 00010011
 	//done
 }
+
 
 //used to get the frequency currently set, based off QNF_GetCh
 //returns the frequency formatted like: 10800 for 108.00MHz
@@ -52,6 +55,7 @@ unsigned short QN8027::getFreq() {
 	//return 440*5 + 7600 = 9800 this is correct
 }
 
+
 //used to set the frequency, based off QNF_SetCh
 //give it a frequency formatted like: 10800 for 108.00MHz
 void QN8027::setFreq(unsigned short freq) {
@@ -60,6 +64,7 @@ void QN8027::setFreq(unsigned short freq) {
 	char part2 = (char)freq;									//cut off the first 8 bits, so we are left with only 8, part2
 	i2c.write(CH1, part2, 8);									//write part2 to CH1
 
+	//this all might be skippable becuase of setBit above
 	char part1;
 	i2c.read(SYSTEM, part1, 8);									//read all the bytes from address SYSTEM (0x00) out into part1
 	//this is necessary because there are other bits within that address that we want to keep the same
@@ -80,3 +85,18 @@ void QN8027::setFreq(unsigned short freq) {
 	//i2cwrite(SYSTEM, 00000001, 8) this is correct
 
 }
+
+
+//used to set the fm audio tx to Mono or Stereo mode, based off QNF_SetAudioMono
+//needs a boolean value
+void QN8027::setAudioMode(bool isMono) {
+	char mode;
+	if(isMono) {
+		mode = MONO;
+	}
+	else {
+		mode = STEREO;
+	}
+	setBit(SYSTEM, AUDIOMODE, mode);								//set the audio mode bit in SYSTEM depending on the specified mode
+}
+

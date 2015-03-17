@@ -7,9 +7,13 @@
 #define SYSTEM       	0x00
 #define CH1				0x01
 
-
 //bitmasks
 #define CHAN_P1 		0x03
+#define AUDIOMODE		0x10
+
+//values
+#define MONO			0x10
+#define STEREO			0x00
 
 
 class QN8027 {
@@ -17,6 +21,7 @@ class QN8027 {
 		QN8027();
 		unsigned short getFreq();
 		void setFreq(unsigned short freq);
+		void setAudioMode(bool isMono);
     private:
 		void setBit(char address, char bitmask, char value);
 
