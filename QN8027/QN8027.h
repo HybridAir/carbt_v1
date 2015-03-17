@@ -6,6 +6,7 @@
 class QN8027 {
     public:
 		QN8027();
+		void setBit(char address, char bitmask, char value);
     private:
 
 };
