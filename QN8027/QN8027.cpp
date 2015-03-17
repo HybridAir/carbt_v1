@@ -30,6 +30,7 @@ void QN8027::setBit(char address, char bitmask, char value) {
 	//done
 }
 
+<<<<<<< HEAD
 //used to get the frequency currently set, based off QNF_GetCh
 //returns the frequency formatted like: 10800 for 108.00MHz
 unsigned short QN8027::getFreq() {
@@ -75,3 +76,20 @@ void QN8027::setFreq(unsigned short freq) {
 
 }
 
+=======
+//used to get the frequency currently set on the device, based off QNF_GetCh
+//returns the frequency like: 10800 for 108.00MHz
+unsigned short QN8027::getFreq() {
+	char part1;													//holds the first 2 bits of the 10 bit channel, "part1", since they're stored in another address
+	i2c.read(SYSTEM, part1, 8);									//read all the bytes from address SYSTEM (0x00) out into part1
+	part1 = part1 & CHAN_P1;									//AND it with the CHAN_P1 bitmask (0x03 = 00000011), since the last two bits are the ones we want
+	unsigned short outval = part1;									//get the output ready, we are done with part1
+
+	char part2;													//holds the last 8 bits of the 10 bit channel, all stored in their own address
+	i2c.read(CH1, part2, 8);									//read all the bytes from address CH1 (0x00) out into part2
+	outval = (outval << 8) + part2;								//shift the current outval left 8 bits, and add part2, so we get a 10bit output
+	return (outval*5) + 7600;									//convert the fixed frequency and return it
+
+	//add an example here
+}
+>>>>>>> branch 'master' of ssh://git@github.com/HybridAir/carbt_v1.git
