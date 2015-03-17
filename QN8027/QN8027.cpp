@@ -50,47 +50,28 @@ unsigned short QN8027::getFreq() {
 //give it a frequency formatted like: 10800 for 108.00MHz
 void QN8027::setFreq(unsigned short freq) {
 
+	freq = (freq-7600)/5;										//convert the frequency because reasons
+	char part2 = (char)freq;									//cut off the first 8 bits, so we are left with only 8, part2
+	i2c.write(CH1, part2, 8);									//write part2 to CH1
 
+	char part1;
+	i2c.read(SYSTEM, part1, 8);									//read all the bytes from address SYSTEM (0x00) out into part1
+	//this is necessary because there are other bits within that address that we want to keep the same
+	part1 = part1 & ~CHAN_P1;									//AND it with the CHAN_P1 bitmask (0x03 = 00000011), since the last two bits are the ones we want
+	part1 = part1 | ((char)(freq >> 8) & CHAN_P1);				//OR part1 with the freq that has been shifted right 8, and ANDed by the CHAN_P1 bitmask
+	i2c.write(SYSTEM, part1, 8);								//write part1 to SYSTEM
 
-}
+	//EXAMPLE: we want to set the frequency to 98.0 MHZ
+	//when formatted, it equals 9800 or 10011001001000
 
+	//freq = 440 or 110111000
+	//part2 = 184 becuase the 1 in front was chopped off
+	//i2cwrite(CH1, 10111000, 8)
 
-//temp reference
-//sets the frequency, needs the frequency as a 2 byte int
-UINT8 QNF_SetCh(UINT16 freq)
-{
-
-    // calculate ch parameter used for register setting //not me
-    UINT8 tStep;
-    UINT8 tCh;
-    UINT16 f;
-        f = FREQ2CHREG(freq);		//do math on the input frequency ((freq-7600)/5) found in the .h
-        //i guess we are converting the frequency to something nicer?
-
-        // set to reg: CH //not me
-        tCh = (UINT8) f;		//cast the above result to an 8 bit int, cutting off everything in front
-        QND_WriteReg(CH, tCh);	//write the data above to address CH1
-        // set to reg: CH_STEP //not me
-
-        //now we need to write out the top 2 bits to SYSTEM (since there are 10 total)
-        tStep = QND_ReadReg(CH_STEP);		//read out all the data in the SYSTEM address
-        tStep &= ~CH_CH;		//AND the data we got with the NOTed SYSTEM bitmask
-        tStep |= ((UINT8) (f >> 8) & CH_CH);		//OR the above result with (the converted frequency above shifted right 8, ANDed with CH_CH)
-        QND_WriteReg(CH_STEP, tStep);		//write the remaining clusterfuck to it's proper place
-
-    return 1;			//return 1 for some dumb reason
-
-    //EXAMPLE
-    //lets say we want to change the channel to 99.1 mhz
-    //convert it to 9910 = 10011010110110
-
-    //f = 462
-    //tCh = 206 //since 111001110 to UINT8 = 11001110
-    //QND_WriteReg(0x01, 206);
-
-    //tStep = lets say 00000010
-    //tStep = 00000010 AND 11111100 (~00000011 aka 0x03 aka CH_CH) = 0
-    //tStep = 0 OR 1 (1 AND 00000011 = 1, converted to UINT8) = 1
-    //QND_WriteReg(0x00, 00000001);  //this is right
+	//i2cread = 00000011 for example
+	//part1 = 00000011 & 11111100 = 0
+	//part1 = 0 | (1 & 00000011 = 1) = 1
+	//i2cwrite(SYSTEM, 00000001, 8) this is correct
 
 }
+
