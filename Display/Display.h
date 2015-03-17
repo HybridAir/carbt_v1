@@ -9,6 +9,7 @@ class Display {
 		Display();
 		void init();
     private:
+		TextLCD lcd;
 };
 
 #endif

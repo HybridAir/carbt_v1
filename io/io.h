@@ -13,6 +13,7 @@ class io {
         io();
         void doled();
     private:
+        DigitalOut myled;
 
 };
 

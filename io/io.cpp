@@ -5,16 +5,16 @@
 	DigitalIn Play(SELECT);
 	DigitalIn Next(NEXT);
 	DigitalIn Menu(MENU);
-	DigitalOut myled(D2);
+	//DigitalOut myled(D2);
 
-io::io() {
+io::io() : myled(D2){
 
 
 
-	//myled = 1;
+	myled = 1;
 
 }
 
 void io::doled() {
-	myled = 1;
+	//myled = 1;
 }

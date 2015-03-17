@@ -3,21 +3,18 @@
 #include "Display.h"
 #include "io.h"
 #include "XS3868.h"
+#include "QN8027.h"
 
 Serial pc(USBTX, USBRX); // tx, rx
-
-Display disp;
+QN8027 fm(CRYS_DEFAULT, CRYS12, false, false);
+Display lcd;
 io inout;
 XS3868 bt;
-
-
 
 int main() 
 {
 
 	pc.printf("Music Control\n");
-
-	disp.init();
 
 	bt.init();
 	bt.connect();

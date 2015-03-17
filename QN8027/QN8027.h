@@ -18,6 +18,7 @@
 #define IDLE			0x20
 #define XINJ			0xC0
 #define XSEL			0x80
+#define RECAL			0x80
 
 //values
 #define NOIDLE			0x30
@@ -31,18 +32,23 @@
 
 class QN8027 {
     public:
-		QN8027();
+		QN8027(char crysSource, char crysFreq, bool isMono, bool enIdle);
 		void Init();
 		unsigned short getFreq();
 		void setFreq(unsigned short freq);
 		void setTransmit(bool setTransmit);
-		void setAudioMode(bool isMono);
 		void setMute(bool isMuted);
-		void setIdle(bool allowIdle);
-		void setClock(char source);
-		void setCrysFreq(char freq);
+
     private:
 		void setBit(char address, char bitmask, char value);
+		void setAudioMode(bool isMono);
+		void allowIdle(bool allowIdle);
+		void setClock(char source);
+		void setCrysFreq(char freq);
+		char crysSource;
+		char crysFreq;
+		char isMono;
+		char enIdle;
 
 };
 
