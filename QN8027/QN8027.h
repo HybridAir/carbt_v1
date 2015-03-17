@@ -3,7 +3,9 @@
 
 #include <mbed.h>
 
-//I2C addresses, as named in the datasheet
+#define ADDRESS			0x2C		//i2c address for the device
+
+//I2C registers, as named in the datasheet
 #define SYSTEM       	0x00
 #define CH1				0x01
 #define GPLT			0x02
@@ -34,6 +36,7 @@ class QN8027 {
     public:
 		QN8027(char crysSource, char crysFreq, bool isMono, bool enIdle);
 		void Init();
+		void getInfo();
 		unsigned short getFreq();
 		void setFreq(unsigned short freq);
 		void setTransmit(bool setTransmit);

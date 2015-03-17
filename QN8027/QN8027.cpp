@@ -5,12 +5,26 @@
 
 I2C i2c(D14, D15);			//we need I2C you know
 
+extern Serial pc;
+
 QN8027::QN8027(char crysSource, char crysFreq, bool isMono, bool enIdle) {
 	this->crysSource = crysSource;
 	this->crysFreq = crysFreq;
 	this->isMono = isMono;
 	this->enIdle = enIdle;
+	i2c.frequency(400);
 	Init();
+	getInfo();
+}
+
+
+//used for debug
+void QN8027::getInfo() {
+	char outval[8];												//prepare the var for use
+	i2c.read((char)0x06, outval, 8);
+	//pc.printf("asdfd");
+	//pc.printf("%d", outval[1] );
+	//pc.printf("%x", outval[0]);
 }
 
 
@@ -18,7 +32,8 @@ QN8027::QN8027(char crysSource, char crysFreq, bool isMono, bool enIdle) {
 void QN8027::Init() {
 	char cmd[1];
 	cmd[0] = 0x80;
-	i2c.write(SYSTEM, cmd, 1);						//resets to all default settings (SWRST = 1)
+	int x = i2c.write(SYSTEM, cmd, 1);						//resets to all default settings (SWRST = 1)
+	pc.printf(x);
 	wait_ms(20);									//wait for it to reset
 	setClock(crysSource);
 	setCrysFreq(crysFreq);
