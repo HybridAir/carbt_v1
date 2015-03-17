@@ -98,27 +98,50 @@ void QN8027::setFreq(unsigned short freq) {
 }
 
 
+//used to set the tx status (IDLE or transmitting)
+//use it to save power
+void QN8027::setTransmit(bool setTransmit) {
+	if(setTransmit) {
+		setBit(SYSTEM, TXREQ, TXREQ);
+	}
+	else {
+		setBit(SYSTEM, TXREQ, 0x00);
+	}
+}
+
+
 //used to set the fm audio tx to Mono or Stereo mode, based off QNF_SetAudioMono
 //needs a boolean value
 void QN8027::setAudioMode(bool isMono) {
-	char mode;
 	if(isMono) {
-		mode = MONOMODE;
+		setBit(SYSTEM, MONO, MONO);
 	}
 	else {
-		mode = STEREOMODE;
+		setBit(SYSTEM, MONO, 0x00);
 	}
-	setBit(SYSTEM, MONO, mode);								//set the audio mode bit in SYSTEM depending on the specified mode
 }
 
 
-//used to set the tx status (IDLE or transmitting)
-//use it to save power
-void QN8027::setIdle(bool setIdle) {
-	if(setIdle) {
-		setBit(SYSTEM, TXREQ, IDLE);
+//used to set the fm audio tx to Mono or Stereo mode, based off QNF_SetAudioMono
+void QN8027::setMute(bool isMuted) {
+	if(isMuted) {
+		setBit(SYSTEM, MUTE, MUTE);
 	}
 	else {
-		setBit(SYSTEM, TXREQ, ACTIVE);
+		setBit(SYSTEM, MUTE, 0x00);
 	}
 }
+
+
+//used to allow the device to go into IDLE mode
+//disable if you want the device to always be transmitting, even when there is no sound
+void QN8027::setIdle(bool allowIdle) {
+	if(allowIdle) {
+		setBit(GPLT, IDLE, IDLE);
+	}
+	else {
+		setBit(GPLT, IDLE, NOIDLE);
+	}
+}
+
+
