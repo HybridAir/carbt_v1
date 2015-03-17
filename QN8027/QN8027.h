@@ -15,12 +15,8 @@
 class QN8027 {
     public:
 		QN8027();
-<<<<<<< HEAD
 		unsigned short getFreq();
 		void setFreq(unsigned short freq);
-=======
-
->>>>>>> branch 'master' of ssh://git@github.com/HybridAir/carbt_v1.git
     private:
 		void setBit(char address, char bitmask, char value);
 
