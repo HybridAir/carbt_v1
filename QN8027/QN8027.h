@@ -15,7 +15,8 @@
 class QN8027 {
     public:
 		QN8027();
-		unsigned short getFreq()
+		unsigned short getFreq();
+		void setFreq(unsigned short freq);
     private:
 		void setBit(char address, char bitmask, char value);
 
