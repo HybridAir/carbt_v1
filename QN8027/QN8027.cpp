@@ -145,3 +145,16 @@ void QN8027::setIdle(bool allowIdle) {
 }
 
 
+//used to set the device's clock source
+//default is CRYS_DEFAULT, crystal on both pins
+void QN8027::setClock(char source) {
+	setBit(REG_XTL, XINJ, source);
+}
+
+
+//used to set the crystal frequency
+void QN8027::setCrysFreq(char freq) {
+	setBit(REG_VGA, XSEL, freq);
+}
+
+
