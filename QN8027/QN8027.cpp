@@ -7,7 +7,18 @@
 I2C i2c(D14, D15);			//we need I2C you know
 
 QN8027::QN8027() {
+	Init();
+}
 
+
+//used to reset, recalibrate, and initialize the device
+void QN8027::Init() {
+	i2c.write(SYSTEM, 0x80, 8);						//resets to all default settings (SWRST = 1)
+	wait_ms(20);									//wait for it to reset
+	//add crystal settings in here
+	setBit(SYSTEM, 0x80, 0x80);						//reset the FSM (RECAL = 1)
+	setBit(SYSTEM, 0x80, 0x00);						//recalibrate the FSM (RECAL = 0)
+	wait_ms(20);									//wait for calibrations to complete
 }
 
 
@@ -92,11 +103,22 @@ void QN8027::setFreq(unsigned short freq) {
 void QN8027::setAudioMode(bool isMono) {
 	char mode;
 	if(isMono) {
-		mode = MONO;
+		mode = MONOMODE;
 	}
 	else {
-		mode = STEREO;
+		mode = STEREOMODE;
 	}
-	setBit(SYSTEM, AUDIOMODE, mode);								//set the audio mode bit in SYSTEM depending on the specified mode
+	setBit(SYSTEM, MONO, mode);								//set the audio mode bit in SYSTEM depending on the specified mode
 }
 
+
+//used to set the tx status (IDLE or transmitting)
+//use it to save power
+void QN8027::setIdle(bool setIdle) {
+	if(setIdle) {
+		setBit(SYSTEM, TXREQ, IDLE);
+	}
+	else {
+		setBit(SYSTEM, TXREQ, ACTIVE);
+	}
+}
