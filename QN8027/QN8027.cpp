@@ -43,7 +43,13 @@ unsigned short QN8027::getFreq() {
 	outval = (outval << 8) + part2;								//shift the current outval left 8 bits, and add part2, so we get a 10bit output
 	return (outval*5) + 7600;									//convert the fixed frequency and return it
 
-	//add an example here
+	//EXAMPLE: the frequency is currently set to 98.0 MHZ
+	//i2cread = 00000001 = part1
+	//part1 = 00000001 & 00000011 = 00000001 = outval
+
+	//i2cread = 10111000 = part2
+	//outval = 100000000 + 10111000 = 110111000
+	//return 440*5 + 7600 = 9800 this is correct
 }
 
 //used to set the frequency, based off QNF_SetCh
