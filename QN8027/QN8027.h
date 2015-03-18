@@ -3,7 +3,7 @@
 
 #include <mbed.h>
 
-#define ADDRESS			0x2C		//i2c address for the device
+#define ADDRESS			0x58		//i2c address for the device
 
 //I2C registers, as named in the datasheet
 #define SYSTEM       	0x00
@@ -20,7 +20,7 @@
 #define IDLE			0x20
 #define XINJ			0xC0
 #define XSEL			0x80
-#define RECAL			0x80
+#define RECAL			0x40
 
 //values
 #define NOIDLE			0x30
@@ -36,14 +36,15 @@ class QN8027 {
     public:
 		QN8027(char crysSource, char crysFreq, bool isMono, bool enIdle);
 		void Init();
-		void getInfo();
 		unsigned short getFreq();
 		void setFreq(unsigned short freq);
 		void setTransmit(bool setTransmit);
 		void setMute(bool isMuted);
 
     private:
-		void setBit(char address, char bitmask, char value);
+		void writeOut(char reg, char data);
+		char readIn(char reg);
+		void writeBits(char reg, char bitmask, char data);
 		void setAudioMode(bool isMono);
 		void allowIdle(bool allowIdle);
 		void setClock(char source);
