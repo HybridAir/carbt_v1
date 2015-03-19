@@ -46,6 +46,7 @@ class XS3868 {
 		char getConStatus();
 		void disconnect();
 		bool connected;
+		bool connecting;
     private:
 		void sendCmd(string command);
 		bool readStat(char *data);
