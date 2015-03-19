@@ -3,8 +3,16 @@
 
 #include "Display.h"
 
-Display::Display() : lcd(D8, D9, D4, D5, D6, D7) {
+extern Serial pc;
 
+Display::Display(TextLCD& lcdin) : lcd(lcdin) {
+	pc.printf("got disp\r\n");
+
+
+};
+
+void Display::init() {
+	//wait(1);
 	//create the custom chars
 	lcd.setUDC(0, (char *) top1);
 	lcd.setUDC(1, (char *) top2);
@@ -12,37 +20,6 @@ Display::Display() : lcd(D8, D9, D4, D5, D6, D7) {
 	lcd.setUDC(3, (char *) left1);
 	lcd.setUDC(4, (char *) right2);
 	lcd.setUDC(5, (char *) right1);
-
-	lcd.cls();
-	wait_ms(250);
-	lcd.locate(1, 0);
-	lcd.putc(0);
-	lcd.putc(1);
-	wait_ms(250);
-
-	lcd.locate(0, 1);
-	lcd.putc(3);
-	lcd.putc(2);
-	wait_ms(250);
-
-	lcd.putc(4);
-	lcd.putc(5);
-
-
-	wait_ms(250);
-	lcd.locate(6, 0);
-	lcd.printf("carbt_v1");
-	lcd.locate(6, 1);
-	lcd.printf("Searching for device");				//scroll this
-
-};
-
-void Display::init() {
-	//do bluetooth connection
-	//and then first page setup in here
-	//actually no
-	//that stuff can all go in pages.cpp or something
-	//only use this for core lcd stuff
 }
 
 

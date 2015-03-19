@@ -13,10 +13,14 @@ const char right1[] = {0x0, 0x0, 0x0, 0x10, 0x18, 0x1c, 0x1e, 0x3};
 
 class Display {
     public:
-		Display();
+		Display(TextLCD& lcdin);
 		void init();
     private:
-		TextLCD lcd;
+		TextLCD& lcd;
 };
+
+
+
+
 
 #endif
