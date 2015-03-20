@@ -25,6 +25,7 @@ class ScrollText {
 		bool ready;
 		int textLength;
 		int maxVisible;
+		bool scrolling;
 };
 
 #endif
