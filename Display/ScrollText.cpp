@@ -6,36 +6,64 @@
 
 //default constructor, sets up everything the object needs to know
 //needs the lcd object, the text to scroll, starting position, length of the display to scroll, speed in ms, and direction
-ScrollText::ScrollText(TextLCD& lcdin, string textIn, int col, int row, int length, int speed, bool left2right) : lcd(lcdin) {
+ScrollText::ScrollText(TextLCD& lcdin, string textIn, int col, int row, int length, int speed) : lcd(lcdin) {
 	this->textIn = textIn;
 	this->col = col;
 	this->row = row;
 	this->length = length;
 	this->speed = speed;
-	this->left2right = left2right;
+	textLength = textIn.length();
 	curPos = 0;													//used internally, sets the current text scroll position to the beginning
 	ready = true;												//ready to start scrolling the text
+
+	if(textLength <= length) {					//if the text length is <= the amount of space we get on the LCD
+		//don't need to scroll anything
+	}
+	else {
+		textIn = textIn + " - ";				//else, add a "space" at the end of the text, to make the loop pretty
+		textLength = textIn.length();			//recalculate the new length
+	}
 }
 
 //used to actually move the text, must be called continuously to ensure good fps (depending on speed)
 void ScrollText::scroll() {
-	//if the cursor is at the end
-		//add the beginning of the text to the end to make it loop
+	if(ready) {																		//if it's time to scroll the text one space
+		lcd.locate(col, row);														//get the lcd in the correct position
+		string outString;															//get an output string ready
+
+		if(curPos > textLength) {													//if we are at the end of the text
+			curPos = 0;																//put the position back to the beginning; 0
+		}
+
+		if(((curPos - 1) >= (textLength - length)) && curPos != 0) {				//if the last part of text is filling up the usable display area, and we're not at the beginning
+			//append the end of the text to the beginning, so it "loops" continuously
+			string end = textIn.substr(curPos, textLength);							//cut out a string from the current position, to the end of the string
+			string start = textIn.substr(0, (length - (textLength - curPos)));		//cut out a string from its beginning, to the amount of empty spaces left in the display area
+			string outString = end + start;											//combine the two strings strings into one big super string
+		}
+		else {
+			string outString = textIn.substr(curPos, length);   			//cut a out a string starting from the current position, to the usable length
+		}
 
 
-	if(ready) {
-
+		lcd.printf("%s", outString.c_str());				//is that seriously fucking it
+		//I love it
 	}
-	//check the timer (for speed control) thread safe
-	//if it's time to move the text up
-		//subtract length from x, this is the max chars that can be shown at any time
-		//get the length of textIn
+	else if(time.read_ms() >= speed) {					//else, wait until we're ready
+			ready = true;
+			time.stop();
+			time.reset();
+		}
+	}
+
+
 		//for(int x = 0;textlength;x++)
 			//get the current part of the text into a var
 			//increase the var by 1
 			//create a substring of textin, starting at the new var, and ending at the length
 			//print it at the connect position
 			//hopefully it works
+		//done, reset and start the timer
 
 	lcd.cls();
 		lcd.locate(1, 0);
@@ -44,52 +72,6 @@ void ScrollText::scroll() {
 
 }
 
-
-//referenced from an older project
-//void LCDControl::scrollTweet() {                                                //used to scroll the tweet text, must be continuously called
-//    if(scroll) {
-//        switch(section) {
-//            case 0: {                                                           //beginning of tweet section
-//                if(printedBegin) {                                              //if we already printed the beginning
-//                    unsigned long currentMillis1 = millis();
-//                    if(currentMillis1 - previousMillis > opt.getReadTime()) {   //wait for the user read time to elapse
-//                        previousMillis = currentMillis1;
-//                        section++;                                              //done waiting, allow the program to go to the next section
-//                        lcdPos = 0;                                             //reset the lcdPos var, needs to start at 0 after the beginning
-//                    }
-//                }
-//                else {                                                          //did not print the beginning yet
-//                    if(currentTweet) {                                          //if we are on the current tweet
-//                        printBegin(twt.getTweetBegin());                        //print the beginning
-//                    }
-//                    else {                                                      //if we are on the previous tweet
-//                        printBegin(twt.getPrevBegin());                         //print the previous beginning
-//                    }
-//                }
-//                break;
-//            }
-//            case 1:  {                                                          //scrolling section
-//                if(opt.getScroll()) {
-//                    unsigned long currentMillis2 = millis();
-//                    if(currentMillis2 - previousMillis > textSpeed) {               //check if it's time to shift the text
-//                        previousMillis = currentMillis2;
-//                        shiftText();                                                //shift the text by one
-//                    }
-//                }
-//                break;
-//            }
-//            case 2:   {                                                         //end of tweet section
-//                unsigned long currentMillis3 = millis();
-//                if(currentMillis3 - previousMillis > opt.getReadTime()) {       //wait for the user read time to elapse
-//                    previousMillis = currentMillis3;
-//                    section = 0;                                                //done waiting, go back to section 0
-//                    printedBegin = false;
-//                }
-//                break;
-//            }
-//        }
-//    }
-//}
 //
 //void LCDControl::shiftText() {                                                  //used to shift the tweet text by one column
 //    if(currentTweet) {                                                          //if we are on the current tweet

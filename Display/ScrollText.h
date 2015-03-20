@@ -11,18 +11,20 @@ using namespace std;
 
 class ScrollText {
     public:
-		ScrollText(TextLCD& lcdin, string textIn, int col, int row, int length, int speed, bool left2right);
+		ScrollText(TextLCD& lcdin, string textIn, int col, int row, int length, int speed);
 		void scroll();
     private:
 		TextLCD& lcd;
 		string textIn;
+		Timer time;
 		int col;
 		int row;
 		int length;
 		int speed;
-		bool left2right;
 		int curPos;
 		bool ready;
+		int textLength;
+		int maxVisible;
 };
 
 #endif
