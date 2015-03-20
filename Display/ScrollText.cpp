@@ -3,10 +3,14 @@
 
 #include "ScrollText.h"
 
+extern Serial pc;
+
 
 //default constructor, sets up everything the object needs to know
 //needs the lcd object, the text to scroll, starting position, length of the display to scroll, speed in ms, and direction
 ScrollText::ScrollText(TextLCD& lcdin, string textIn, int col, int row, int length, int speed) : lcd(lcdin) {
+	string extend = " - ";
+
 	this->textIn = textIn;
 	this->col = col;
 	this->row = row;
@@ -16,45 +20,59 @@ ScrollText::ScrollText(TextLCD& lcdin, string textIn, int col, int row, int leng
 	curPos = 0;													//used internally, sets the current text scroll position to the beginning
 	ready = true;												//ready to start scrolling the text
 
+
+
 	if(textLength <= length) {					//if the text length is <= the amount of space we get on the LCD
 		//don't need to scroll anything
 	}
 	else {
-		textIn = textIn + " - ";				//else, add a "space" at the end of the text, to make the loop pretty
-		textLength = textIn.length();			//recalculate the new length
+
+		this->textIn = textIn + extend;				//else, add a "space" at the end of the text, to make the loop pretty
+		textLength = this->textIn.length();			//recalculate the new length
 	}
+	pc.printf("%d\r\n", textLength);
+	pc.printf("%s", textIn.c_str());
 }
 
 //used to actually move the text, must be called continuously to ensure good fps (depending on speed)
 void ScrollText::scroll() {
 	if(ready) {																		//if it's time to scroll the text one space
+		ready = false;
+
 		lcd.locate(col, row);														//get the lcd in the correct position
 		string outString;															//get an output string ready
 
-		if(curPos > textLength) {													//if we are at the end of the text
+		if(curPos >= textLength) {													//if we are at the end of the text
+			//pc.printf("got1");
 			curPos = 0;																//put the position back to the beginning; 0
 		}
 
 		if(((curPos - 1) >= (textLength - length)) && curPos != 0) {				//if the last part of text is filling up the usable display area, and we're not at the beginning
+			pc.printf("x");
 			//append the end of the text to the beginning, so it "loops" continuously
 			string end = textIn.substr(curPos, textLength);							//cut out a string from the current position, to the end of the string
 			string start = textIn.substr(0, (length - (textLength - curPos)));		//cut out a string from its beginning, to the amount of empty spaces left in the display area
-			string outString = end + start;											//combine the two strings strings into one big super string
+			outString = end + start;											//combine the two strings strings into one big super string
+			//outString = textIn.substr(curPos, textLength);
 		}
 		else {
-			string outString = textIn.substr(curPos, length);   			//cut a out a string starting from the current position, to the usable length
+			//pc.printf("got3");
+			outString = textIn.substr(curPos, length);   			//cut a out a string starting from the current position, to the usable length
 		}
-
 
 		lcd.printf("%s", outString.c_str());				//is that seriously fucking it
 		//I love it
+		curPos++;
+		time.start();
+		pc.printf("%d\r\n", curPos);
 	}
 	else if(time.read_ms() >= speed) {					//else, wait until we're ready
 			ready = true;
 			time.stop();
 			time.reset();
-		}
 	}
+
+}
 
 
 		//for(int x = 0;textlength;x++)
@@ -65,12 +83,8 @@ void ScrollText::scroll() {
 			//hopefully it works
 		//done, reset and start the timer
 
-	lcd.cls();
-		lcd.locate(1, 0);
-		lcd.printf("%s", textIn.c_str());
 
 
-}
 
 //
 //void LCDControl::shiftText() {                                                  //used to shift the tweet text by one column
