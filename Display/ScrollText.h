@@ -8,6 +8,8 @@
 #include <string>
 using namespace std;
 
+const int FIRSTDELAY = 1000;
+
 
 class ScrollText {
     public:
@@ -17,6 +19,7 @@ class ScrollText {
 		TextLCD& lcd;
 		string textIn;
 		Timer time;
+		Timer firstWait;
 		int col;
 		int row;
 		int length;
@@ -25,6 +28,8 @@ class ScrollText {
 		bool ready;
 		int textLength;
 		bool scrolling;
+		bool firstRun;
+		bool firstWaiting;
 };
 
 #endif
