@@ -3,7 +3,10 @@
 
 #include <mbed.h>
 #include "TextLCD.h"
+#include <string>
+using namespace std;
 
+//custom characters (used for boot logo)
 const char top1[] = {0x1, 0x1, 0x3, 0x3, 0x7, 0x7, 0x3, 0x1};
 const char top2[] = {0x10, 0x10, 0x18, 0x18, 0x1c, 0x1c, 0x18, 0x10};
 const char left2[] = {0x8, 0x1c, 0x1e, 0x1e, 0x1e, 0x18, 0x0, 0x0};
@@ -15,6 +18,7 @@ class Display {
     public:
 		Display(TextLCD& lcdin);
 		void init();
+		void scrollText(string textIn, int x, int y, int length, int speed);
     private:
 		TextLCD& lcd;
 };
