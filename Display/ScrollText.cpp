@@ -1,18 +1,31 @@
-//scrolls text, what more could you want
+//used to scroll a section of text in a single row, what more could you want
+//text scrolling method is continuous, meaning it doesn't reset at the end, it just loops
 
 #include "ScrollText.h"
 
-ScrollText::ScrollText(TextLCD& lcdin) : lcd(lcdin) {
 
+//default constructor, sets up everything the object needs to know
+//needs the lcd object, the text to scroll, starting position, length of the display to scroll, speed in ms, and direction
+ScrollText::ScrollText(TextLCD& lcdin, string textIn, int col, int row, int length, int speed, bool left2right) : lcd(lcdin) {
+	this->textIn = textIn;
+	this->col = col;
+	this->row = row;
+	this->length = length;
+	this->speed = speed;
+	this->left2right = left2right;
+	curPos = 0;													//used internally, sets the current text scroll position to the beginning
+	ready = true;												//ready to start scrolling the text
 }
 
-//used to scroll a section of text in a single row, needs the text to scroll, starting position, length of the display to scroll, and speed in ms
-//text currently on there will be fine since this will only write to specific chars, not the whole row at once
-//must be called continuously to ensure good fps
-//I might make this a class to allow for multiple scrollers at once
-void ScrollText::scroll(string textIn, int x, int y, int length, int speed, bool direction) {
-	//set the cursor position
+//used to actually move the text, must be called continuously to ensure good fps (depending on speed)
+void ScrollText::scroll() {
+	//if the cursor is at the end
+		//add the beginning of the text to the end to make it loop
 
+
+	if(ready) {
+
+	}
 	//check the timer (for speed control) thread safe
 	//if it's time to move the text up
 		//subtract length from x, this is the max chars that can be shown at any time
@@ -23,6 +36,10 @@ void ScrollText::scroll(string textIn, int x, int y, int length, int speed, bool
 			//create a substring of textin, starting at the new var, and ending at the length
 			//print it at the connect position
 			//hopefully it works
+
+	lcd.cls();
+		lcd.locate(1, 0);
+		lcd.printf("%s", textIn.c_str());
 
 
 }
