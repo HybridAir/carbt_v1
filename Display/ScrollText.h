@@ -24,7 +24,6 @@ class ScrollText {
 		int curPos;
 		bool ready;
 		int textLength;
-		int maxVisible;
 		bool scrolling;
 };
 

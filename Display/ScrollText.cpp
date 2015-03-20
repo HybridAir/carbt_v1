@@ -3,9 +3,6 @@
 
 #include "ScrollText.h"
 
-extern Serial pc;
-
-
 //default constructor, sets up everything the object needs to know
 //needs the lcd object, the text to scroll, starting position, length of the display to scroll, speed in ms, and direction
 ScrollText::ScrollText(TextLCD& lcdin, string textIn, int col, int row, int length, int speed) : lcd(lcdin) {
@@ -37,12 +34,10 @@ void ScrollText::scroll() {
 		string outString;															//get an output string ready
 
 		if(curPos >= textLength) {													//if we are at the end of the text
-			//pc.printf("got1");
 			curPos = 0;																//put the position back to the beginning; 0
 		}
 
 		if(((curPos - 1) >= (textLength - length)) && curPos != 0) {				//if the last part of text is filling up the usable display area, and we're not at the beginning
-			pc.printf("x");
 			//append the end of the text to the beginning, so it "loops" continuously
 			string end = textIn.substr(curPos, textLength);							//cut out a string from the current position, to the end of the string
 			string start = textIn.substr(0, (length - (textLength - curPos)));		//cut out a string from its beginning, to the amount of empty spaces left in the display area
