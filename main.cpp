@@ -11,51 +11,47 @@ Serial pc(USBTX, USBRX); // tx, rx
 Serial sbt(PA_11, PA_12);
 I2C i2c(D14, D15);
 //QN8027 fm(CRYS_DEFAULT, CRYS24, false, false);				//temporarily disabled
-Pager pager;
 io inout;
+Pager pager(inout);
 XS3868 bt;
 
 int main() {
+	inout.init();					//get io going
 
-	while(bt.connected == false) {								//while the bluetooth client is not connected
-		bt.connect();									//run this continuously to attempt to make a connection
-		//monitor buttons
-		char status = bt.getConStatus();				//get the connection status
-		if(status == 1) {							//if the XS3868 is searching for the client
-			pager.search();
+	while(bt.connected == false && !bt.bypassBt) {								//while the bt client is not connected and we're not bypassing bt
+		bt.connect();															//run this continuously to attempt to make a connection
+		if(inout.btnPressAll()) {												//if any buttons have been pressed
+			if(pager.askBypassBt()) {											//ask the user if they don't want to use bluetooth
+				//if the user said they don't want to (yes/true)
+				bt.bypassBt = true;												//bypass bt
+			}
+			else {
+				pager.showTitle();												//if the user said yes, show the title again and continue reconnecting
+			}
 		}
-		else if(status == 2) {							//if the XS3868 is connecting to the client
-			pager.connecting();
+		else {
+			char status = bt.getConStatus();									//get the connection status
+			if(status == 1) {													//if the XS3868 is searching for the client
+				pager.search();													//let the user know it's searching
+				//fade connection led
+			}
+			else if(status == 2) {												//if the XS3868 is connecting to the client
+				pager.connecting();												//let the user know it's connecting
+				//fade connection led
+			}
+			else if(status == 4) {							//if there is a problem with the XS3868
+				pager.bterror();							//show the error message
+				//print out the error to serial, including the response from bluetooth
+				//prompt to skip bt I guess
+			}
 		}
-		else if(status == 4) {							//if there is a problem with the XS3868
-			pager.bterror();
-			//lcd show error
-			//print out the error to serial, including the response from bluetooth
-			//prompt to skip bt I guess
-		}
-
-		//if a button was pressed, prompt for skipping bt
-
+	}
+	if(!bt.bypassBt) {															//if we got here and the bt is not being bypassed
+		pager.connected();														//let the user know it was connected successfully
 	}
 
 	while(1) {
-		//pager.connected();
-		pager.bterror();
+		inout.led(inout.btnReadAll());				//temp
 	}
-	//while not connected
-		//monitor bt
-		//if searching
-			//searching on lcd
-			//connection led fading
-		//else if connecting
-			//you know
-	//then when connectedf
-	//do connected thing on lcd
-
-	while(1) {
-		//bt.init();			//initialize the device, includes conencting to the client
-
-	}
-
 
 }
