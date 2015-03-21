@@ -3,16 +3,22 @@
 
 #include <mbed.h>
 #include "DebounceIn.h"
+#include "Pressed.h"
 
-#define SELECT D11
-#define LEFT D10
-#define RIGHT D12
-#define MENU D13
+static const PinName SELECT = D11;
+static const PinName LEFT = D12;
+static const PinName RIGHT = D10;
+static const PinName MENU = D13;
 
 class io {
     public:
         io();
         void init();
+        bool pressLeft();
+        bool pressSelect();
+        bool pressRight();
+        bool pressMenu();
+
         bool readLeft();
         bool readSelect();
         bool readRight();
@@ -20,6 +26,7 @@ class io {
         bool btnReadAll();
         void led(bool on);
     private:
+        bool leftPressed;
 
 };
 
