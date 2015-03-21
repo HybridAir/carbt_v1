@@ -4,19 +4,28 @@
 #include <mbed.h>
 #include "TextLCD.h"
 #include "Display.h"
+#include "ScrollText.h"
 #include <string>
 using namespace std;
+
+const string BT_ERROR = "Failed to connect, continue without connecting?";
 
 
 class Pager {
     public:
 		Pager();
 		void init();
+		void search();
+		void connecting();
+		void connected();
+		void bterror();
     private:
 		Display disp;
 		TextLCD lcd;
-		//TextLCD lcd(D8, D9, D4, D5, D6, D7);
-		//Display disp(lcd);
+		ScrollText searchText;
+		ScrollText connectingText;
+		ScrollText connectedText;
+		ScrollText bterrorText;
 };
 
 #endif
