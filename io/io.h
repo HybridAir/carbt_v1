@@ -2,6 +2,7 @@
 #define	IO_H
 
 #include <mbed.h>
+#include "DebounceIn.h"
 
 #define SELECT D11
 #define PREV D10
@@ -11,9 +12,10 @@
 class io {
     public:
         io();
-        void doled();
+        void init();
+        bool btnCheckAll();
+        void led(bool on);
     private:
-        DigitalOut myled;
 
 };
 
