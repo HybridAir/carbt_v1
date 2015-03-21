@@ -2,9 +2,7 @@
 #define	SCROLLTEXT_H
 
 #include <mbed.h>
-//#include "rtos.h"
 #include "TextLCD.h"
-#include "Display.h"
 #include <string>
 using namespace std;
 
