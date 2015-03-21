@@ -19,3 +19,12 @@ void Display::init() {
 	lcd.setUDC(4, (char *) right2);
 	lcd.setUDC(5, (char *) right1);
 }
+
+
+//used to clear a specific row, needs the row to clear
+void Display::clearRow(int row) {
+	lcd.locate(0, row);
+	for(int x = 0;x < lcd.columns();x++) {						//for each column in the lcd
+		lcd.printf(" ");										//write an empty character
+	}
+}

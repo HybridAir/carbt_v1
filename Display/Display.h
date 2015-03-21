@@ -18,7 +18,7 @@ class Display {
     public:
 		Display(TextLCD& lcdin);
 		void init();
-		void scrollText(string textIn, int x, int y, int length, int speed);
+		void clearRow(int row);
     private:
 		TextLCD& lcd;
 };
