@@ -5,9 +5,10 @@
 extern Serial pc;
 //ScrollText search(lcd, "Searching for phone", 6, 1, 8, 200);
 
-Pager::Pager() : searchText(lcd, "Searching", 6, 1, 8, 200),
+Pager::Pager(io& ioIn) : searchText(lcd, "Searching", 6, 1, 8, 200),
 connectingText(lcd, "Connecting", 6, 1, 8, 200), connectedText(lcd, "Connected", 6, 1, 8, 200),
-bterrorText(lcd, "Failed to connect, continue without connecting?", 0, 0, 16, 200), disp(lcd), lcd(D8, D9, D4, D5, D6, D7) {				//default constructor, also initializes Display and TextLCD
+bterrorText(lcd, "Failed to connect, continue without connecting?", 0, 0, 16, 200), disp(lcd), lcd(D8, D9, D4, D5, D6, D7), inout(ioIn) {				//default constructor, also initializes Display and TextLCD
+	wait_ms(250);
 	disp.init();														//get the lcd ready for use
 	init();
 
@@ -17,7 +18,7 @@ void Pager::init() {
 	lcd.cls();
 	wait_ms(250);
 	lcd.locate(1, 0);
-	lcd.putc(0x7E);
+	lcd.putc(0);
 	lcd.putc(1);
 	wait_ms(250);
 
@@ -36,6 +37,20 @@ void Pager::init() {
 	lcd.printf("Loading");
 }
 
+void Pager::showTitle() {
+	lcd.cls();
+	lcd.locate(1, 0);
+	lcd.putc(0);
+	lcd.putc(1);
+	lcd.locate(0, 1);
+	lcd.putc(3);;
+	lcd.putc(2);
+	lcd.putc(4);
+	lcd.putc(5);
+	lcd.locate(6, 0);
+	lcd.printf("carbt_v1");
+}
+
 void Pager::search() {
 	searchText.scroll();
 }
@@ -50,4 +65,24 @@ void Pager::connected() {
 
 void Pager::bterror() {
 	bterrorText.scroll();
+}
+
+
+//used to ask the user if they want to skip connecting to the bluetooth device (usually becuase we can't find it, or there's another problem)
+bool Pager::askBypassBt() {
+	ScrollText bypass(lcd, "Do you want to skip connecting to bluetooth?", 0, 0, 16, 200);
+	Prompt askBypass(lcd, disp, inout, "yes", "no", 1);
+	//bool asking = true;
+	while(1) {
+		bypass.scroll();
+		char answer = askBypass.ask();
+		//pc.printf("prompt:%d\r\n", askBypass.ask());
+		if(answer == 1) {							//user selected yes
+			return true;
+		}
+		else if(answer == 2) {						//user selected no
+			return false;
+			//asking = false;
+		}
+	}
 }
