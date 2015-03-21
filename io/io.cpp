@@ -2,9 +2,9 @@
 //TODO:all button check, specific buttons, idk
 #include "io.h"
 
-	DebounceIn Prev(PREV);
-	DebounceIn Play(SELECT);
-	DebounceIn Next(NEXT);
+	DebounceIn Left(LEFT);
+	DebounceIn Select(SELECT);
+	DebounceIn Right(RIGHT);
 	DebounceIn Menu(MENU);
 
 	DigitalOut myled(D2);
@@ -17,8 +17,24 @@ void io::init() {
 	Play.set_debounce_us(5000);
 }
 
-bool io::btnCheckAll() {
-	if(Prev.read() || Play.read() || Next.read() || Menu.read()) {
+bool io::readLeft() {
+	return Left.read();
+}
+
+bool io::readSelect() {
+	return Select.read();
+}
+
+bool io::readRight() {
+	return Right.read();
+}
+
+bool io::readMenu() {
+	return Menu.read();
+}
+
+bool io::btnReadAll() {
+	if(Left.read() || Select.read() || Right.read() || Menu.read()) {
 		return true;
 	}
 	else {

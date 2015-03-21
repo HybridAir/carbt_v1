@@ -5,15 +5,19 @@
 #include "DebounceIn.h"
 
 #define SELECT D11
-#define PREV D10
-#define NEXT D12
+#define LEFT D10
+#define RIGHT D12
 #define MENU D13
 
 class io {
     public:
         io();
         void init();
-        bool btnCheckAll();
+        bool readLeft();
+        bool readSelect();
+        bool readRight();
+        bool readMenu();
+        bool btnReadAll();
         void led(bool on);
     private:
 
