@@ -14,7 +14,10 @@ io::io() {
 }
 
 void io::init() {
-	Play.set_debounce_us(5000);
+	Left.set_debounce_us(5000);
+	Select.set_debounce_us(5000);
+	Right.set_debounce_us(5000);
+	Menu.set_debounce_us(5000);
 }
 
 bool io::readLeft() {
