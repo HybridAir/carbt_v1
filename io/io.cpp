@@ -43,6 +43,15 @@ bool io::pressMenu() {
 	return menuBtn.btnPress();
 }
 
+bool io::btnPressAll() {
+	if(leftBtn.btnPress() || selectBtn.btnPress() || rightBtn.btnPress() || menuBtn.btnPress()) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 bool io::readSelect() {
 	return Select.read();
 }
