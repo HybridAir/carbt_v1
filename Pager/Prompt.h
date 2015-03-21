@@ -25,6 +25,7 @@ class Prompt {
 		char opt2Length;
 		bool askedYet;
 		char space;
+		bool opt1Selected;
 		void writePrompt(bool opt1Select);
 };
 
