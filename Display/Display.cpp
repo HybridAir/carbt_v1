@@ -1,14 +1,12 @@
 //controls core lcd stuff, including custom chars, brightness, contrast, etc
-//TODO: clear row, scroll text
 
 #include "Display.h"
 
 extern Serial pc;
 
 Display::Display(TextLCD& lcdin) : lcd(lcdin) {
+	wait_ms(250);												//short delay so the lcd can initialize itself before we start messing with it
 	pc.printf("got disp\r\n");
-
-
 };
 
 void Display::init() {
