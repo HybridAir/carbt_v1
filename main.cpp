@@ -15,6 +15,7 @@ io inout;
 Pager pager(inout);
 XS3868 bt;
 
+
 int main() {
 	inout.init();					//get io going
 
@@ -30,29 +31,31 @@ int main() {
 			}
 		}
 		else {
+			wait_ms(5);
 			char status = bt.getConStatus();									//get the connection status
 			if(status == 1) {													//if the XS3868 is searching for the client
 				pager.search();													//let the user know it's searching
-				//fade connection led
+				inout.connectionLed(status);									//do the connection led
 			}
 			else if(status == 2) {												//if the XS3868 is connecting to the client
 				pager.connecting();												//let the user know it's connecting
-				//fade connection led
+				inout.connectionLed(status);									//do the connection led
 			}
-			else if(status == 4) {							//if there is a problem with the XS3868
-				pager.bterror();							//show the error message
-				bt.bypassBt = true;
-				//make the user select ok from a prompt
-				//print out the error to serial, including the response from bluetooth
+			else if(status == 4) {												//if there is a problem with the XS3868
+				pager.bterror();												//show the error message to the user
+				inout.connectionLed(0);											//turn the connection led off
+				bt.bypassBt = true;												//bluetooth will not be used
 			}
 		}
 	}
 	if(!bt.bypassBt) {															//if we got here and the bt is not being bypassed
 		pager.connected();														//let the user know it was connected successfully
+		inout.connectionLed(3);													//do the connection led
 	}
 
 	while(1) {
-		inout.led(inout.btnReadAll());				//temp
+		//inout.led(inout.btnReadAll());				//temp
+		//inout.connectionLed(1);
 	}
 
 }
