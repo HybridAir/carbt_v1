@@ -2,6 +2,8 @@
 //TODO:all button check, specific buttons, NEED TO CHECK IF BUTTON WAS RELEASED TOO
 #include "io.h"
 
+extern Serial pc;
+
 	DebounceIn Left(LEFT);
 	DebounceIn Select(SELECT);
 	DebounceIn Right(RIGHT);
@@ -12,10 +14,11 @@
 	Pressed rightBtn(Right);
 	Pressed menuBtn(Menu);
 
-	DigitalOut myled(D2);
+	DigitalOut btnLed(BTN_LED);
+	PwmOut conLed(CON_LED);
 
 io::io() {
-
+	wait_ms(250);								//wait for everything to power up
 }
 
 void io::init() {
@@ -25,6 +28,10 @@ void io::init() {
 	Menu.set_debounce_us(5000);
 
 	leftPressed = false;
+	conLedPwm = 0;								//start the connection led at 0 brightness
+	readyConPwm = true;							//ready to update the connection led pwm
+	conIncreasing = true;						//it will be increasing
+	timeConLed.start();							//start the timer now (might not need to)
 }
 
 bool io::pressSelect() {
@@ -73,6 +80,39 @@ bool io::btnReadAll() {
 	}
 }
 
-void io::led(bool on) {
-	myled = on;
+
+//used to control the connection led, needs the XS3868 status number, and must be called continuously if you want good fading
+void io::connectionLed(char status) {
+	if(status == 0) {											//if the XS3868 is not responding
+		conLed = 0;												//keep the connection led off
+	}
+	else if(status == 1 || status == 2) {						//if the XS3868 is searching or connecting
+		//the following is used to fade the connection led on and off, becuase it looks cool
+		if(readyConPwm) {										//if we're ready to change the pwm
+			if(conIncreasing) {									//if the pwm value is currently increasing
+				conLedPwm += 0.05f;								//add .05 to it
+				if(conLedPwm > 1) {								//if the pwm value is over 1
+					conIncreasing = false;						//we need to decrease the pwm value now
+				}
+			}
+			else {												//if the pwm value is decreasing
+				conLedPwm -= 0.05f;								//subtract .05 from it
+				if(conLedPwm < 0) {								//if the pwm value is less than 0
+					conIncreasing = true;						//start increasing the pwm value
+				}
+			}
+			readyConPwm = false;								//need to wait until we can change the pwm again
+			timeConLed.start();									//start the wait timer
+		}
+		else if(timeConLed.read_ms() >= 10) {					//wait until it has been 10 ms
+			readyConPwm = true;									//ready to change the pwm now
+			timeConLed.stop();									//stop and reset the timer
+			timeConLed.reset();
+		}
+		conLed = conLedPwm;										//update the led with the new pwm
+	}
+	else {														//if the XS3868 is connected
+		conLed = 1;												//keep the led completely on
+	}
 }
+
