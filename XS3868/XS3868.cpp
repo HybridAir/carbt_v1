@@ -10,17 +10,16 @@ XS3868::XS3868() {
 	pc.printf("\n\rcarbt_v2\n\r");
 	connected = false;				//assume not connected
 	connecting = false;
+	bypassBt = false;				//lets the system know if bluetooth will not be used (bypassed)
 	sbt.baud(115200);
-	wait(5);
+	wait(1);						//give the XS3868 some time to power up
 }
 
 
 //used to send a command to the device over serial, wants the COMMAND string
 void XS3868::sendCmd(string command) {
-	pc.printf("%s%s%s", BT_PREFIX.c_str(), command.c_str(), BT_SUFFIX.c_str());		//temp debug
+	//pc.printf("%s%s%s", BT_PREFIX.c_str(), command.c_str(), BT_SUFFIX.c_str());		//temp debug
 	sbt.printf("%s%s%s", BT_PREFIX.c_str(), command.c_str(), BT_SUFFIX.c_str());
-	//pc.printf("AT#MA\r\n");
-	//sbt.printf("AT#MA\r\n");
 }
 
 
@@ -39,7 +38,7 @@ bool XS3868::readStat(char *data) {
 
 
 //prepares the device for operation
-void XS3868::init() {
+void XS3868::init() {				//temp
 	connect();
 	if(connected) {
 		//wait before doing any music commands, the client has to catch up
@@ -68,12 +67,10 @@ void XS3868::connect() {
 				}
 			}
 			else if(status == 2) {							//if the device is currently connecting
-				//checking for this doesn't exactly matter
-				//but we should probably let the user know
-				//later
+				//checking for this doesn't exactly matter, but we should probably let the user know
 			}
 			else if(status == 3) {						//device is connected
-				//if we;re already connected from before, we don't need to reconnect
+				//if we're already connected from before, we don't need to reconnect
 				//might want to make sure a2dp and avrcp are ready do
 				//later
 				connected = true;
@@ -104,8 +101,6 @@ char XS3868::getConStatus() {
 	//need to make sure no other commands are send while waiting
 	//we will get a bad response if that happens
 	if(readStat(dataIn)) {							//if we got a response
-		pc.printf("response:");
-		pc.printf("%s\n\r", dataIn);
 
 		if(dataIn[0] == 'M' && dataIn[1] == 'G') {			//make sure it's the correct response type
 			if(dataIn[2] == '1') {
@@ -119,7 +114,8 @@ char XS3868::getConStatus() {
 			}
 		}
 		else {
-			return 4;						//bad response
+			pc.printf("BT_ERROR:%s\n\r", dataIn);					//we got a bad response, print out the error over serial
+			return 4;												//bad response code
 		}
 	}
 

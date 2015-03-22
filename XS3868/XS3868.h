@@ -47,6 +47,7 @@ class XS3868 {
 		void disconnect();
 		bool connected;
 		bool connecting;
+		bool bypassBt;
     private:
 		void sendCmd(string command);
 		bool readStat(char *data);
