@@ -14,6 +14,8 @@ disp(lcd), lcd(D8, D9, D4, D5, D6, D7), inout(ioIn) {				//default constructor, 
 
 }
 
+
+//shows the boot up animation and title
 void Pager::init() {
 	lcd.cls();
 	wait_ms(250);
@@ -37,6 +39,8 @@ void Pager::init() {
 	lcd.printf("Loading");
 }
 
+
+//used to show the static title screen
 void Pager::showTitle() {
 	lcd.cls();
 	lcd.locate(1, 0);
@@ -63,16 +67,19 @@ void Pager::connected() {
 	connectedText.scroll();
 }
 
+
+//used to tell the user that there was a bluetooth error, and asks them to continue
 void Pager::bterror() {
-	ScrollText bterrorText(lcd, "Failed to connect: BT_ERROR. Select Ok to continue.", 0, 0, 16, 200);
-	lcd.locate(0,1);
-	lcd.printf("       Ok       ");
+	ScrollText bterrorText(lcd, "Failed to connect: BT_ERROR. Select Ok to continue without using Bluetooth.", 0, 0, 16, 200);
+	disp.clearRow(1);										//clear the bottom row
+	lcd.locate(7,1);
+	lcd.printf("Ok");										//print "ok" at the center of the lcd
 	Timer indicatorTime;
-	indicatorTime.start();
+	indicatorTime.start();									//start a timer for blinking the indicator character
 	bool blink = true;
-	while(!inout.pressSelect()) {
-		bterrorText.scroll();
-		if(indicatorTime.read_ms() >= 500) {												//else, wait until we're ready
+	while(!inout.pressSelect()) {							//while the select button has not been pressed yet
+		if(indicatorTime.read_ms() >= 500) {				//blink the indicator character every 500 ms
+			//becuase it looks cool I don't know
 			if(blink) {
 				blink = false;
 			}
@@ -83,19 +90,14 @@ void Pager::bterror() {
 		}
 
 		lcd.locate(6,1);
-		if(blink) {
-
-			lcd.putc(0x7E);
+		if(blink) {											//print the indicator or an empty space depending on what it's time to print
+			lcd.putc(0x7E);									//0x7E is the right arrow character
 		}
 		else {
 			lcd.printf(" ");
 		}
 	}
-
-
-
 	bterrorText.scroll();
-	//push any button to continue
 }
 
 
