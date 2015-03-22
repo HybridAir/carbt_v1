@@ -7,7 +7,7 @@ extern Serial pc;
 
 Pager::Pager(io& ioIn) : searchText(lcd, "Searching", 6, 1, 8, 200),
 connectingText(lcd, "Connecting", 6, 1, 8, 200), connectedText(lcd, "Connected", 6, 1, 8, 200),
-bterrorText(lcd, "Failed to connect, continue without connecting?", 0, 0, 16, 200), disp(lcd), lcd(D8, D9, D4, D5, D6, D7), inout(ioIn) {				//default constructor, also initializes Display and TextLCD
+disp(lcd), lcd(D8, D9, D4, D5, D6, D7), inout(ioIn) {				//default constructor, also initializes Display and TextLCD
 	wait_ms(250);
 	disp.init();														//get the lcd ready for use
 	init();
@@ -64,14 +64,45 @@ void Pager::connected() {
 }
 
 void Pager::bterror() {
+	ScrollText bterrorText(lcd, "Failed to connect: BT_ERROR. Select Ok to continue.", 0, 0, 16, 200);
+	lcd.locate(0,1);
+	lcd.printf("       Ok       ");
+	Timer indicatorTime;
+	indicatorTime.start();
+	bool blink = true;
+	while(!inout.pressSelect()) {
+		bterrorText.scroll();
+		if(indicatorTime.read_ms() >= 500) {												//else, wait until we're ready
+			if(blink) {
+				blink = false;
+			}
+			else {
+				blink = true;
+			}
+			indicatorTime.reset();
+		}
+
+		lcd.locate(6,1);
+		if(blink) {
+
+			lcd.putc(0x7E);
+		}
+		else {
+			lcd.printf(" ");
+		}
+	}
+
+
+
 	bterrorText.scroll();
+	//push any button to continue
 }
 
 
 //used to ask the user if they want to skip connecting to the bluetooth device (usually becuase we can't find it, or there's another problem)
 bool Pager::askBypassBt() {
 	ScrollText bypass(lcd, "Do you want to skip connecting to bluetooth?", 0, 0, 16, 200);
-	Prompt askBypass(lcd, disp, inout, "yes", "no", 1);
+	Prompt askBypass(lcd, disp, inout, "Yes", "No", 1);
 	//bool asking = true;
 	while(1) {
 		bypass.scroll();

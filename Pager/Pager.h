@@ -30,7 +30,7 @@ class Pager {
 		ScrollText searchText;
 		ScrollText connectingText;
 		ScrollText connectedText;
-		ScrollText bterrorText;
+		//ScrollText bterrorText;
 };
 
 #endif

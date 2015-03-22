@@ -41,8 +41,9 @@ int main() {
 			}
 			else if(status == 4) {							//if there is a problem with the XS3868
 				pager.bterror();							//show the error message
+				bt.bypassBt = true;
+				//make the user select ok from a prompt
 				//print out the error to serial, including the response from bluetooth
-				//prompt to skip bt I guess
 			}
 		}
 	}
