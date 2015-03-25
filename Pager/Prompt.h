@@ -12,10 +12,10 @@ const char selector = 0x7E;								//the right arrow character icon in the lcd
 
 class Prompt {
 	public:
-		Prompt(TextLCD& lcdin, Display& dispIn, io& inoutIn, string opt1, string opt2, int row);
+		Prompt(TextLCD_SPI_N& lcdin, Display& dispIn, io& inoutIn, string opt1, string opt2, int row);
 		char ask();
 	private:
-		TextLCD& lcd;
+		TextLCD_SPI_N& lcd;
 		Display& disp;
 		io& inout;
 		string opt1;

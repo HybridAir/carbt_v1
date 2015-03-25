@@ -11,10 +11,10 @@ const int FIRSTDELAY = 1000;
 
 class ScrollText {
     public:
-		ScrollText(TextLCD& lcdin, string textIn, int col, int row, int length, int speed);
+		ScrollText(TextLCD_SPI_N& lcdin, string textIn, int col, int row, int length, int speed);
 		void scroll();
     private:
-		TextLCD& lcd;
+		TextLCD_SPI_N& lcd;
 		string textIn;
 		Timer time;
 		Timer firstWait;

@@ -16,11 +16,12 @@ const char right1[] = {0x0, 0x0, 0x0, 0x10, 0x18, 0x1c, 0x1e, 0x3};
 
 class Display {
     public:
-		Display(TextLCD& lcdin);
+		Display(TextLCD_SPI_N& lcdin);
 		void init();
 		void clearRow(int row);
+		void centerText(string in);
     private:
-		TextLCD& lcd;
+		TextLCD_SPI_N& lcd;
 };
 
 

@@ -6,7 +6,7 @@
 
 //default constructor, sets up everything the object needs to know
 //needs the lcd object, the text to scroll, starting position, length of the display to scroll, speed in ms, and direction
-ScrollText::ScrollText(TextLCD& lcdin, string textIn, int col, int row, int length, int speed) : lcd(lcdin) {
+ScrollText::ScrollText(TextLCD_SPI_N& lcdin, string textIn, int col, int row, int length, int speed) : lcd(lcdin) {
 	this->textIn = textIn;
 	this->col = col;
 	this->row = row;

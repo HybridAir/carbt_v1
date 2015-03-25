@@ -11,7 +11,7 @@ static const PinName RIGHT = D10;
 static const PinName MENU = D13;
 
 static const PinName BTN_LED = D2;
-static const PinName CON_LED = D3;
+static const PinName CON_LED = D8;
 
 class io {
     public:

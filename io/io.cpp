@@ -1,5 +1,6 @@
 //used to manage buttons and leds and sensors and stuff, nothing LCD related
-//TODO:all button check, specific buttons, NEED TO CHECK IF BUTTON WAS RELEASED TOO
+//TODO: button led brightness control, light sensor, temp sensor, car voltage, beeper
+
 #include "io.h"
 
 extern Serial pc;

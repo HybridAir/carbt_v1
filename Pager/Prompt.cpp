@@ -4,7 +4,7 @@
 
 //default constructor, needs the lcd to write to, io to read from, both options (opt1 is the default selected), and the lcd row to write to
 //options can be 6 characters long MAX
-Prompt::Prompt(TextLCD& lcdin,  Display& dispIn, io& inoutIn, string opt1, string opt2, int row) : disp(dispIn), lcd(lcdin), inout(inoutIn) {
+Prompt::Prompt(TextLCD_SPI_N& lcdin,  Display& dispIn, io& inoutIn, string opt1, string opt2, int row) : disp(dispIn), lcd(lcdin), inout(inoutIn) {
 	this->opt1 = opt1;
 	this->opt2 = opt2;
 	this->row = row;

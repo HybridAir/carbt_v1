@@ -1,17 +1,25 @@
 //controls and manages "pages", and all other lcd content
+//TODO: maybe add a special title/connection page?
 
 #include "Pager.h"
 
 extern Serial pc;
-//ScrollText search(lcd, "Searching for phone", 6, 1, 8, 200);
+extern SPI spi_lcd;
 
-Pager::Pager(io& ioIn) : searchText(lcd, "Searching", 6, 1, 8, 200),
+//default constructor, also initializes Display and TextLCD
+
+Pager::Pager(io& ioIn, XS3868& btIn) : bt(btIn), pMusic(lcd, inout, disp, bt), searchText(lcd, "Searching", 6, 1, 8, 200),
 connectingText(lcd, "Connecting", 6, 1, 8, 200), connectedText(lcd, "Connected", 6, 1, 8, 200),
-disp(lcd), lcd(D8, D9, D4, D5, D6, D7), inout(ioIn) {				//default constructor, also initializes Display and TextLCD
-	wait_ms(250);
+disp(lcd), inout(ioIn), lcd(&spi_lcd, D6, D7, TextLCD::LCD16x2, NC, TextLCD::ST7032_3V3) {
+
+	lcd.setContrast(48);
+	lcd.setOrient(TextLCD::Top);
+	lcd.setInvert(true);
+
+	activePage = 0;					//default page
 	disp.init();														//get the lcd ready for use
 	init();
-
+	newPage = true;
 }
 
 
@@ -55,6 +63,42 @@ void Pager::showTitle() {
 	lcd.printf("carbt_v1");
 }
 
+
+//used to display a specific page on the display, must be ran continuously
+void Pager::doPage() {
+	//get the current page
+	//if the current != the old page
+	//end the old page and init the new (current) page
+	//old = current
+
+	//or
+	//get the current page
+	//display it
+	//the only time the page will change is if the menu was just shown
+
+	switch(activePage) {
+		case 0:
+			pMusic.showPage(newPage);
+		break;
+		default:
+		break;
+	}
+
+	newPage = false;
+}
+
+
+//used to display the page switching menu, must be ran continuously
+void Pager::doMenu() {
+
+}
+
+
+
+
+
+
+
 void Pager::search() {
 	searchText.scroll();
 }
@@ -64,7 +108,12 @@ void Pager::connecting() {
 }
 
 void Pager::connected() {
-	connectedText.scroll();
+	//connectedText.scroll();
+	lcd.cls();
+	lcd.locate(0, 0);
+	disp.centerText("Connection");
+	lcd.locate(0, 1);
+	disp.centerText("Successful");
 }
 
 
