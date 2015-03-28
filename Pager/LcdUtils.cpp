@@ -13,6 +13,10 @@ LcdUtils::LcdUtils(TextLCD_SPI_N& lcdIn) : lcd(lcdIn) {
 	lcd.setUDC(3, (char *) left1);
 	lcd.setUDC(4, (char *) right2);
 	lcd.setUDC(5, (char *) right1);
+
+	lcd.setUDC(6, (char *) pauseChar);
+	lcd.setUDC(7, (char *) nextChar);
+	lcd.setUDC(8, (char *) prevChar);
 }
 
 
@@ -69,18 +73,27 @@ void LcdUtils::clearRow(int row) {
 
 //used to center a string of text in a single row, text must be less than the display width
 void LcdUtils::centerText(string in) {
-
 	char length = in.length();
-
-
 	char space = (16 - length) / 2;
-
 	for(int x = 0;x < space;x++) {
 		lcd.printf(" ");
-
-
 	}
 	lcd.printf("%s", in.c_str());
+}
 
 
+//used to show the custom music control icons, set the lcd cursor to the correct place before calling, they take up 2 spaces each
+void LcdUtils::playPauseIcon() {
+	lcd.putc(1);
+	lcd.putc(0);
+}
+
+void LcdUtils::prevIcon() {
+	lcd.putc(2);
+	lcd.putc(2);
+}
+
+void LcdUtils::nextIcon() {
+	lcd.putc(1);
+	lcd.putc(1);
 }
