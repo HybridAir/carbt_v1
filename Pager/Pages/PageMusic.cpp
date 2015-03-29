@@ -4,10 +4,11 @@
 
 #include "PageMusic.h"
 
+extern Serial pc;
 
 //default constructor, needs the lcd and io objects
-PageMusic::PageMusic(TextLCD_SPI_N& lcdIn, io& ioIn, Display& dispIn, XS3868& btIn) : bt(btIn), lcd(lcdIn), inout(ioIn), disp(dispIn) {
-
+PageMusic::PageMusic(TextLCD_SPI_N& lcdIn, LcdUtils& utilsIn, io& ioIn, XS3868& btIn) : bt(btIn), lcd(lcdIn), inout(ioIn), utils(utilsIn) {
+	pc.printf("pmus");
 }
 
 
@@ -15,10 +16,6 @@ PageMusic::PageMusic(TextLCD_SPI_N& lcdIn, io& ioIn, Display& dispIn, XS3868& bt
 void PageMusic::showPage(bool first) {
 	if(first) {
 		lcd.cls();
-		lcd.setUDC(0, (char *) pause);
-		lcd.setUDC(1, (char *) nextChar);
-		lcd.setUDC(2, (char *) prevChar);
-		//disp.clearRow(1);
 	}
 
 	showControls();
@@ -53,13 +50,11 @@ void PageMusic::btnMon() {
 
 void PageMusic::showControls() {
 	lcd.locate(0,0);
-	lcd.putc(1);
-	lcd.putc(0);
+	utils.playPauseIcon();
 	lcd.printf("  ");
-	lcd.putc(1);
-	lcd.putc(1);
+	utils.nextIcon();
 	lcd.printf("  ");
-	lcd.putc(2);
-	lcd.putc(2);
+	utils.prevIcon();
+	lcd.printf("  ");
 	lcd.printf("  Menu");
 }

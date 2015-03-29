@@ -1,23 +1,32 @@
 //controls and manages "pages", and all other lcd content
-//TODO: maybe add a special title/connection page?
+//TODO: maybe add a special title/connection page, move connection stuff to its own page
+//PagerUtils?
 
 #include "Pager.h"
 
 extern Serial pc;
-extern SPI spi_lcd;
 
-//default constructor, also initializes Display and TextLCD
 
-Pager::Pager(io& ioIn, XS3868& btIn) : bt(btIn), pMusic(lcd, inout, disp, bt), searchText(lcd, "Searching", 6, 1, 8, 200),
+//default constructor, wants the lcd, io, and XS3868 objects
+Pager::Pager(TextLCD_SPI_N& lcdIn, io& ioIn, XS3868& btIn) : bt(btIn), pMusic(lcd, utils, inout, bt), searchText(lcd, "Searching", 6, 1, 8, 200),
 connectingText(lcd, "Connecting", 6, 1, 8, 200), connectedText(lcd, "Connected", 6, 1, 8, 200),
-disp(lcd), inout(ioIn), lcd(&spi_lcd, D6, D7, TextLCD::LCD16x2, NC, TextLCD::ST7032_3V3) {
+inout(ioIn), utils(lcd), lcd(lcdIn) {
 
 	lcd.setContrast(48);
-	lcd.setOrient(TextLCD::Top);
-	lcd.setInvert(true);
 
 	activePage = 0;					//default page
-	disp.init();														//get the lcd ready for use
+
+
+	lcd.setUDC(0, (char *) top1);
+		lcd.setUDC(1, (char *) top2);
+		lcd.setUDC(2, (char *) left2);
+		lcd.setUDC(3, (char *) left1);
+		lcd.setUDC(4, (char *) right2);
+		lcd.setUDC(5, (char *) right1);
+
+
+
+	//disp.init();														//get the lcd ready for use
 	init();
 	newPage = true;
 }
@@ -45,6 +54,7 @@ void Pager::init() {
 	lcd.printf("carbt_v1");
 	lcd.locate(6, 1);
 	lcd.printf("Loading");
+	wait_ms(250);
 }
 
 
@@ -108,19 +118,21 @@ void Pager::connecting() {
 }
 
 void Pager::connected() {
-	//connectedText.scroll();
+	//Display disp2(lcd);
+
 	lcd.cls();
 	lcd.locate(0, 0);
-	disp.centerText("Connection");
+	utils.centerText("Connection");
 	lcd.locate(0, 1);
-	disp.centerText("Successful");
+	utils.centerText("Successful");
 }
 
 
 //used to tell the user that there was a bluetooth error, and asks them to continue
 void Pager::bterror() {
+	//Display disp3(lcd);
 	ScrollText bterrorText(lcd, "Failed to connect: BT_ERROR. Select Ok to continue without using Bluetooth.", 0, 0, 16, 200);
-	disp.clearRow(1);										//clear the bottom row
+	utils.clearRow(1);										//clear the bottom row
 	lcd.locate(7,1);
 	lcd.printf("Ok");										//print "ok" at the center of the lcd
 	Timer indicatorTime;
@@ -145,15 +157,16 @@ void Pager::bterror() {
 		else {
 			lcd.printf(" ");
 		}
+		bterrorText.scroll();
 	}
-	bterrorText.scroll();
+
 }
 
 
 //used to ask the user if they want to skip connecting to the bluetooth device (usually becuase we can't find it, or there's another problem)
 bool Pager::askBypassBt() {
 	ScrollText bypass(lcd, "Do you want to skip connecting to bluetooth?", 0, 0, 16, 200);
-	Prompt askBypass(lcd, disp, inout, "Yes", "No", 1);
+	Prompt askBypass(lcd, utils, inout, "Yes", "No", 1);
 	//bool asking = true;
 	while(1) {
 		bypass.scroll();
