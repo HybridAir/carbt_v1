@@ -3,7 +3,7 @@
 
 #include "Pager.h"
 
-extern Serial pc;
+extern Serial pc;					//temp debug
 
 
 //default constructor, wants the lcd, io, and XS3868 objects
@@ -16,7 +16,13 @@ connectingText(lcd, "Connecting", 6, 1, 8, 200), connectedText(lcd, "Connected",
 }
 
 
-//used to display a specific page on the display, must be ran continuously
+//shows the powerup title screen
+void Pager::showTitle() {
+	utils.showTitle();
+}
+
+
+//displays a specific page on the display, must be ran continuously
 void Pager::doPage() {
 	//get the current page
 	//if the current != the old page
