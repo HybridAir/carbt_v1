@@ -10,10 +10,7 @@ LcdUtils::LcdUtils(TextLCD_SPI_N& lcdIn) : lcd(lcdIn) {
 }
 
 
-//shows the startup animation and title
-void LcdUtils::showStartup() {
-	lcd.cls();
-
+void LcdUtils::logoChars() {
 	//set the custom logo characters
 	lcd.setUDC(0, (char *) top1);
 	lcd.setUDC(1, (char *) top2);
@@ -21,7 +18,13 @@ void LcdUtils::showStartup() {
 	lcd.setUDC(3, (char *) left1);
 	lcd.setUDC(4, (char *) right2);
 	lcd.setUDC(5, (char *) right1);
+}
 
+
+//shows the startup animation and title
+void LcdUtils::showStartup() {
+	lcd.cls();
+	logoChars();
 	wait_ms(250);
 	lcd.locate(1, 0);
 	lcd.putc(0);
@@ -48,6 +51,7 @@ void LcdUtils::showStartup() {
 //used to show the static title screen
 void LcdUtils::showTitle() {
 	lcd.cls();
+	logoChars();
 	lcd.locate(1, 0);
 	lcd.putc(0);
 	lcd.putc(1);
