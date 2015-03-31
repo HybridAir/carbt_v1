@@ -25,49 +25,14 @@ Pager pager(lcd, inout, bt);
 //probably comms or something
 
 
+//general function prototypes
+void connect();
+
+
 int main() {
 
-	inout.init();					//get io going
-
-
-	while(bt.connected == false && !bt.bypassBt) {								//while the bt client is not connected and we're not bypassing bt
-		bt.connect();															//run this continuously to attempt to make a connection
-		if(inout.btnPressAll()) {												//if any buttons have been pressed
-			if(pager.askBypassBt()) {											//ask the user if they don't want to use bluetooth
-				//if the user said they don't want to (yes/true)
-				bt.bypassBt = true;												//bypass bt
-			}
-			else {
-				pager.showTitle();												//if the user said yes, show the title again and continue reconnecting
-			}
-		}
-		else {
-			wait_ms(5);
-			char status = bt.getConStatus();									//get the connection status
-			if(status == 1) {													//if the XS3868 is searching for the client
-				pager.search();													//let the user know it's searching
-				inout.connectionLed(status);									//do the connection led
-			}
-			else if(status == 2) {												//if the XS3868 is connecting to the client
-				pager.connecting();												//let the user know it's connecting
-				inout.connectionLed(status);									//do the connection led
-			}
-			else if(status == 4) {												//if there is a problem with the XS3868
-				pager.bterror();												//show the error message to the user
-				inout.connectionLed(0);											//turn the connection led off
-				bt.bypassBt = true;												//bluetooth will not be used
-			}
-		}
-	}
-	if(!bt.bypassBt) {
-		//if we got here and the bt is not being bypassed
-		while(1) {
-			pager.bterror();
-		}
-		pager.connected();														//let the user know it was connected successfully
-		//pager connected doesn't work????
-		inout.connectionLed(3);													//do the connection led
-	}
+	inout.init();					//get io going, can probably move this maybe
+	connect();						//attempt connecting to the bt client
 
 	while(1) {
 		//if connected, default to music page
@@ -94,4 +59,46 @@ int main() {
 
 	}
 
+}
+
+
+void connect() {
+	while(bt.connected == false && !bt.bypassBt) {								//while the bt client is not connected and we're not bypassing bt
+		bt.connect();															//run this continuously to attempt to make a connection
+		if(inout.btnPressAll()) {												//if any buttons have been pressed
+			if(pager.askBypassBt()) {											//ask the user if they don't want to use bluetooth
+				//if the user said they want to bypass (yes/true)
+				bt.bypassBt = true;												//bypass bt
+			}
+			else {
+				pager.showTitle();												//if the user doesn't want to bypass, show the title again and continue connecting
+			}
+		}
+		else {																	//if no buttons have been pressed
+			wait_ms(5);															//rate limit?
+			char status = bt.getConStatus();									//get the connection status
+			if(status == 1) {													//if the XS3868 is searching for the client
+				pager.search();													//let the user know it's searching
+				inout.connectionLed(status);									//do the connection led
+			}
+			else if(status == 2) {												//if the XS3868 is connecting to the client
+				pager.connecting();												//let the user know it's connecting
+				inout.connectionLed(status);									//do the connection led
+			}
+			else if(status == 4) {												//if there is a problem with the XS3868
+				inout.connectionLed(0);											//turn the connection led off
+				pager.bterror();												//show the error message to the user
+				bt.bypassBt = true;												//bluetooth will not be used
+			}
+		}
+	}
+
+
+	//at this point the bt connection was successful
+	if(!bt.bypassBt) {															//if bluetooth will be used
+		pager.connected();														//let the user know it was connected successfully
+		inout.connectionLed(3);													//set the connection led to connected
+		wait(1);																//wait so the user can read the message
+	}
+	//if bluetooth is being bypassed, don't do anything special
 }
