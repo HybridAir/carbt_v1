@@ -26,8 +26,6 @@ const string BT_ERROR = "Failed to connect, continue without connecting?";
 class Pager {
     public:
 		Pager(TextLCD_SPI_N& lcdIn, io& ioIn, XS3868& btIn);
-		void init();
-		void showTitle();
 		void doPage();
 		void doMenu();
 
@@ -42,8 +40,6 @@ class Pager {
     private:
 		io& inout;
 		XS3868& bt;
-		//Display disp;
-		//TextLCD lcd;
 		TextLCD_SPI_N& lcd;
 		LcdUtils utils;
 		PageMusic pMusic;

@@ -1,6 +1,5 @@
 //controls and manages "pages", and all other lcd content
 //TODO: maybe add a special title/connection page, move connection stuff to its own page
-//PagerUtils?
 
 #include "Pager.h"
 
@@ -9,68 +8,11 @@ extern Serial pc;
 
 //default constructor, wants the lcd, io, and XS3868 objects
 Pager::Pager(TextLCD_SPI_N& lcdIn, io& ioIn, XS3868& btIn) : bt(btIn), pMusic(lcd, utils, inout, bt), searchText(lcd, "Searching", 6, 1, 8, 200),
-connectingText(lcd, "Connecting", 6, 1, 8, 200), connectedText(lcd, "Connected", 6, 1, 8, 200),
-inout(ioIn), utils(lcd), lcd(lcdIn) {
-
-	lcd.setContrast(48);
-
-	activePage = 0;					//default page
-
-
-	lcd.setUDC(0, (char *) top1);
-		lcd.setUDC(1, (char *) top2);
-		lcd.setUDC(2, (char *) left2);
-		lcd.setUDC(3, (char *) left1);
-		lcd.setUDC(4, (char *) right2);
-		lcd.setUDC(5, (char *) right1);
-
-
-
-	//disp.init();														//get the lcd ready for use
-	init();
-	newPage = true;
-}
-
-
-//shows the boot up animation and title
-void Pager::init() {
-	lcd.cls();
-	wait_ms(250);
-	lcd.locate(1, 0);
-	lcd.putc(0);
-	lcd.putc(1);
-	wait_ms(250);
-
-	lcd.locate(0, 1);
-	lcd.putc(3);;
-	lcd.putc(2);
-	wait_ms(250);
-
-	lcd.putc(4);
-	lcd.putc(5);
-	wait_ms(250);
-
-	lcd.locate(6, 0);
-	lcd.printf("carbt_v1");
-	lcd.locate(6, 1);
-	lcd.printf("Loading");
-	wait_ms(250);
-}
-
-
-//used to show the static title screen
-void Pager::showTitle() {
-	lcd.cls();
-	lcd.locate(1, 0);
-	lcd.putc(0);
-	lcd.putc(1);
-	lcd.locate(0, 1);
-	lcd.putc(3);;
-	lcd.putc(2);
-	lcd.putc(4);
-	lcd.putc(5);
-	lcd.locate(6, 0);
-	lcd.printf("carbt_v1");
+connectingText(lcd, "Connecting", 6, 1, 8, 200), connectedText(lcd, "Connected", 6, 1, 8, 200), inout(ioIn), utils(lcd), lcd(lcdIn) {
+	lcd.setContrast(48);			//set the contrast
+	activePage = 0;					//default page, move this to a const
+	utils.showStartup();			//show the startup animation
+	newPage = true;					//the device was just turned on, so it's always going to be a new page the first time
 }
 
 
