@@ -32,6 +32,7 @@ class LcdUtils {
 		void prevIcon();
 		void nextIcon();
 	private:
+		void musicIcons();
 		TextLCD_SPI_N& lcd;
 };
 

@@ -6,6 +6,14 @@
 
 //default constructor, needs the lcd object
 LcdUtils::LcdUtils(TextLCD_SPI_N& lcdIn) : lcd(lcdIn) {
+
+}
+
+
+//shows the startup animation and title
+void LcdUtils::showStartup() {
+	lcd.cls();
+
 	//set the custom logo characters
 	lcd.setUDC(0, (char *) top1);
 	lcd.setUDC(1, (char *) top2);
@@ -14,15 +22,6 @@ LcdUtils::LcdUtils(TextLCD_SPI_N& lcdIn) : lcd(lcdIn) {
 	lcd.setUDC(4, (char *) right2);
 	lcd.setUDC(5, (char *) right1);
 
-	lcd.setUDC(6, (char *) pauseChar);
-	lcd.setUDC(7, (char *) nextChar);
-	lcd.setUDC(8, (char *) prevChar);
-}
-
-
-//shows the startup animation and title
-void LcdUtils::showStartup() {
-	lcd.cls();
 	wait_ms(250);
 	lcd.locate(1, 0);
 	lcd.putc(0);
@@ -84,16 +83,25 @@ void LcdUtils::centerText(string in) {
 
 //used to show the custom music control icons, set the lcd cursor to the correct place before calling, they take up 2 spaces each
 void LcdUtils::playPauseIcon() {
+	musicIcons();
 	lcd.putc(1);
 	lcd.putc(0);
 }
 
 void LcdUtils::prevIcon() {
+	musicIcons();
 	lcd.putc(2);
 	lcd.putc(2);
 }
 
 void LcdUtils::nextIcon() {
+	musicIcons();
 	lcd.putc(1);
 	lcd.putc(1);
+}
+
+void LcdUtils::musicIcons() {
+	lcd.setUDC(0, (char *) pauseChar);
+	lcd.setUDC(1, (char *) nextChar);
+	lcd.setUDC(2, (char *) prevChar);
 }
