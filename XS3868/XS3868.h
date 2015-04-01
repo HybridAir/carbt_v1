@@ -44,11 +44,14 @@ class XS3868 {
 		void init();
 		void connect();
 		char getConStatus();
+		bool getSongStatus();
 		void disconnect();
+		bool playPause();
 		bool connected;
 		bool connecting;
-		bool bypassBt;
+		bool bypassBt;					//lets the system know if bluetooth will not be used (bypassed)
     private:
+		Timer readLimit;
 		void sendCmd(string command);
 		bool readStat(char *data);
 };

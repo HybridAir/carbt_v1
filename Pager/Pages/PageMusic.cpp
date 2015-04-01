@@ -1,6 +1,7 @@
 //Music Control page, allows the user to control the two most commonly used functions, music and fm frequency control
 //pressing the menu button switches modes, holding it goes to the menu like usual
 //maybe one day it will get song info support :C
+//TODO: implement menu button holding to switch pages
 
 #include "PageMusic.h"
 
@@ -36,8 +37,8 @@ void PageMusic::showPage(bool first) {
 		utils.clearRow(0);
 	}
 
-	//status();								//show music and fm freq status on second row, needs to be fixed first
-	showControls();
+	//status();								//show music and fm freq status on bottom row
+	showControls();							//show controls on the top row
 
 	if(musicMode) {							//if the page is set to music control mode
 		doMusic();
@@ -50,7 +51,15 @@ void PageMusic::showPage(bool first) {
 
 //handles the music mode operation
 void PageMusic::doMusic() {
-
+	if(btnMon() == 1) {					//if the play/pause button was pressed
+		lcd.locate(0,1);
+		if(bt.playPause()) {
+			lcd.printf("playing");
+		}
+		else {
+			lcd.printf("paused");
+		}
+	}
 }
 
 
@@ -62,14 +71,16 @@ void PageMusic::doFreq() {
 
 //displays the currently music status and fm frequency on the buttom row
 void PageMusic::status() {
-
 	lcd.locate(0,1);
+
 	if(bt.getSongStatus()) {
 		lcd.printf("Playing");
 	}
 	else {
 		lcd.printf("Paused");
 	}
+
+	//leave the default power on status blank I guess
 
 }
 
