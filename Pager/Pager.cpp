@@ -10,7 +10,7 @@ extern Serial pc;					//temp debug
 Pager::Pager(TextLCD_SPI_N& lcdIn, io& ioIn, XS3868& btIn) : bt(btIn), pMusic(lcd, utils, inout, bt), searchText(lcd, "Searching", 6, 1, 8, 200),
 connectingText(lcd, "Connecting", 6, 1, 8, 200), connectedText(lcd, "Connected", 6, 1, 8, 200), inout(ioIn), utils(lcd), lcd(lcdIn) {
 	lcd.setContrast(48);			//set the contrast
-	activePage = 0;					//default page, move this to a const
+	activePage = 0;					//default connected page, cant be const
 	utils.showStartup();			//show the startup animation
 	newPage = true;					//the device was just turned on, so it's always going to be a new page the first time
 }
