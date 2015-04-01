@@ -19,11 +19,16 @@ class PageMusic {
     private:
 		void showControls();
 		void status();
-		void btnMon();
+		char btnMon();
+		void doMusic();
+		void doFreq();
 		TextLCD_SPI_N& lcd;
 		LcdUtils& utils;
 		io& inout;
 		XS3868& bt;
+		bool musicMode;
+		bool prevMusicMode;
+		//char currentBtn;
 };
 
 

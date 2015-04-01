@@ -10,8 +10,6 @@ extern Serial pc;
 PageMusic::PageMusic(TextLCD_SPI_N& lcdIn, LcdUtils& utilsIn, io& ioIn, XS3868& btIn) : bt(btIn), lcd(lcdIn), inout(ioIn), utils(utilsIn) {
 	musicMode = true;
 	prevMusicMode = true;						//used for keeping track of mode changes
-	//currentBtn = false;							//keep track of the currently pressed button
-	//probably just trigger the title in the button function
 }
 
 
@@ -21,25 +19,30 @@ void PageMusic::showPage(bool first) {
 		lcd.cls();
 	}
 
-	if(btnMon == 4) {						//if the mode button was just pressed
+	if(btnMon() == 4) {						//if the mode button was just pressed
+		utils.clearRow(0);
+		lcd.locate(0,0);
+
 		if(musicMode) {						//if the current mode is music mode
 			musicMode = false;				//it will now be fm freq mode
+			utils.centerText("FM Mode");
 		}
 		else {								//vice versa
 			musicMode = true;
+			utils.centerText("Music Mode");
 		}
-		lcd.cls();
-		//show new mode title
+
+		wait(1);
+		utils.clearRow(0);
 	}
 
 	//status();								//show music and fm freq status on second row, needs to be fixed first
+	showControls();
 
 	if(musicMode) {							//if the page is set to music control mode
-		showControls(true);
 		doMusic();
 	}
 	else {									//if the page is set to fm freq control mode
-		showControls(false);
 		doFreq();
 	}
 }
@@ -56,6 +59,8 @@ void PageMusic::doFreq() {
 
 }
 
+
+//displays the currently music status and fm frequency on the buttom row
 void PageMusic::status() {
 
 	lcd.locate(0,1);
@@ -88,18 +93,22 @@ char PageMusic::btnMon() {
 	}
 }
 
-void PageMusic::showControls(bool music) {
-	if(music) {
-		lcd.locate(0,0);
+
+//shows different button controls depending on the current mode
+void PageMusic::showControls() {
+	lcd.locate(0,0);
+
+	if(musicMode) {								//if music mode
 		utils.playPauseIcon();
 		lcd.printf("  ");
+		utils.prevIcon();
+		lcd.printf("  ");
 	}
-	else {
-		lcd.locate(4,0);
+	else {										//if fm freq mode
+		utils.prevIcon();
+		lcd.locate(8,0);
 	}
 
-	utils.prevIcon();
-	lcd.printf("  ");
 	utils.nextIcon();
 	lcd.printf("  Mode");
 }
