@@ -54,6 +54,7 @@ class XS3868 {
 		Timer readLimit;
 		void sendCmd(string command);
 		bool readStat(char *data);
+		bool pairing;
 };
 
 #endif
