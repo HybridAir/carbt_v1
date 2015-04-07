@@ -82,25 +82,12 @@ void XS3868::init() {
 
 }
 
-void callback();
-void callback() {
-    // Note: you need to actually read from the serial to clear the RX interrupt
-    //response = true;
-	pc.printf("respoinse\r\n");
-	pc.printf("get[%c]\n", sbt.getc());
-
-					//char str[4];								//create an arry to store it in
-					//sbt.scanf("%s", str);						//get the response in
-
-					//pc.printf("Stat got [%s]\r\n", str);		//temp debug
-}
-
 
 //handles connecting to the bluetooth client, call this frequently
 //might have to make it return the status later
 //give this access to pager?
 void XS3868::connect() {
-	if(!connecting) {
+	if(!connecting) {							//need to reset some variables
 		disconnecting = false;
 		pairing = false;
 		disconnect = false;
@@ -111,8 +98,6 @@ void XS3868::connect() {
 		flushRX();
 		response = false;
 		checking = false;
-		//z.start();
-		//sbt.attach(&callback);
 	}
 
 
@@ -121,116 +106,56 @@ void XS3868::connect() {
 		if(connectTimer.read_ms() >= 1000) {				//try to get the device status every 100 ms if we don't have it yet
 			flushRX();										//get any garbage out of the buffer just in case
 			sendCmd(BT_STATUS);								//send the status request command
+			connectTimer.reset();							//get the 100ms timer reference going
+		}
+		else {												//if we are waiting
+			char stat[3];
+			if(readStat(stat)) {							//keep checking the rx buffer for a response
+				char status = parseHFPStatus(stat);			//parse the response if we got one
+				switch(status) {
+					case '1':								//if the device is ready to pair
+					case '2':								//or if it's already connecting to the client for some strange reason
+						pc.printf("ready to pair\r\n");
+						pairing = true;						//continue onto the pairing part
+						break;
+					case '3':								//if the device has already been paired/connected
+						pc.printf("already connected\r\n");
+						disconnecting = true;				//disconnect the client to freshen things up, and go on from there
+				}
+				gettingStatus = false;						//either way we got a status, we are done here
+				connectTimer.reset();						//reset the timer for the next part
+			}
+		}
+	}
+	else if(disconnecting) {								//disconnecting is optional
+		if(connectTimer.read_ms() >= 100) {					//try to get the client to disconnect every 100 ms
+			sendCmd(BT_DISCONNECTAV);						//try to disconnect the AV source first
+			sendCmd(BT_DISCONNECT);							//and then the client
+			connectTimer.reset();							//reset the 100 ms timer
+		}
+		else {												//if we are waiting
+			char stat[3];
+			if(readStat(stat)) {							//if we got a response
+				if(stat[0] == 'I' && stat[1] == 'A') {		//if we got the disconnected response
+					pc.printf("Disconnected successfully");	//temp debug
+					connectTimer.reset();
+					disconnecting = false;					//done disconnecting
+					pairing = true;							//continue onto pairing
+				}
+				else {
+					//idk we got something weird
+				}
+			}
+		}
+	}
+	else if(pairing) {										//next part of the process is pairing/connecting with the client
+		if(t.read_ms() >= 100) {							//try to pair every 100ms
+			sendCmd(BT_CONNECT);							//send the pair command
 			connectTimer.reset();
 		}
 		else {
-			char stat[3];
-			if(readStat(stat)) {
-				if(parseStatus(stat) == '1') {
-					pc.printf("ready to pair\r\n");
-				}
-			}
 
 		}
-//			char counter = 0;
-//							char str[3];
-//
-//			while(1) {
-//
-//				while(sbt.readable()) {
-//					char in = sbt.getc();
-//					if(in == '\r' || in == '\n') {
-//						if(counter > 0) {
-//							pc.printf("Stat got [%s]\r\n", str);		//temp debug
-//						}
-//					}
-//					else {
-//						str[counter] = in;
-//						pc.printf("charin [%c]\r\n", str[counter]);
-//												counter++;
-//					}
-//
-//					//pc.putc(sbt.getc());
-//
-//
-//					//char str[4];								//create an arry to store it in
-//					//sbt.scanf("%c%c", str[0], str[1]);						//get the response in
-//					//pc.printf("Stat got [%s]\r\n", str);		//temp debug
-//				}
-//
-//			}
-
-		}
-
-//		if(sbt.readable()) {						//if we got a response
-//				char str[4];								//create an arry to store it in
-//				sbt.scanf("%s", str);						//get the response in
-//
-//				pc.printf("Stat got [%s]\r\n", str);		//temp debug
-//
-//				switch(parseStatus(str)) {					//parse the status
-//					case '1':								//client is not connected yet
-//						pc.printf("Ready\r\n");
-//						pairing = true;						//device is ready to pair with client
-//						break;
-//					case '2':
-//						pc.printf("Connecting\r\n");
-//						pairing = true;						//shouldn't ever get here, might as well go to pairing anyways
-//						break;
-//					case '3':
-//						pc.printf("Connected\r\n");
-//						disconnecting = true;				//need to disconnect the device before pairing for stability or something, idk
-//						break;
-//					case '4':
-//						pc.printf("Parse error\r\n");
-//						//disconnecting = true;				//something wrong happened
-//				}
-//
-//				gettingStatus = false;						//done getting the status
-//				flushRX();									//clear out anything leftover in the rx buffer
-//				connectTimer.reset();						//reset the timer
-//		}
-	//}
-	else if(disconnecting) {
-		if(connectTimer.read_ms() >= 100) {				//try to get the client to disconnect every 100 ms
-			sendCmd(BT_DISCONNECTAV);
-			sendCmd(BT_DISCONNECT);
-			connectTimer.reset();						//reset the 100 ms timer
-		}
-		else if(sbt.readable()) {						//if we got a response
-			char str[4];								//create an arry to store it in
-			//sbt.scanf("%s", str);						//get the response in
-			pc.printf("Discon got [%s]\r\n", str);		//temp debug
-			while(1) {}
-		}
-	}
-
-
-
-//	if(disconnecting) {
-//		if(disconnect) {
-//			sendCmd(BT_DISCONNECTAV);
-//			sendCmd(BT_DISCONNECT);
-//			disconnect = false;
-//		}
-//		else {
-//			if(sbt.readable()) {
-//				while(sbt.readable()) {
-//					pc.putc(sbt.getc());
-//				}
-//				disconnecting = false;
-//				pairing = true;
-//			}
-//		}
-//	}
-	//pairing = true;
-
-	while(pairing) {				//change this to if so we can do something else while this works
-//		if(newResponse) {					//if we got something from the device
-//			//check it
-//			//if it's good
-//			pairing = false;
-//		}
 
 		if(sbt.readable()) {
 									            //pc.putc(sbt.getc());
@@ -314,39 +239,42 @@ void XS3868::connect() {
 }
 
 
-//extracts and returns the State Query status number, use it to get the bluetooth connection status
-//call it continuously until you get something not 0
-//0: no response, device is possibly offline, keep trying
-//1: Ready
-//2: Connecting
-//3: Connected
-//4: bad response, device sent garbage or a response to a different command
-
-
-//actually, pass this the string we got from outside this instead
-//this will only parse it
-char XS3868::parseStatus(char* stat) {
-
-		if(stat[0] == 'M' && stat[1] == 'G') {			//make sure it's the correct response type
-			if(stat[2] == '1') {
-				return '1';
-			}
-			else if(stat[2] == '2') {
-				return '2';
-			}
-			else if (stat[2] > '2') {
-				connected = true;
-				return '3';
-			}
+//parses the HFP status response (MG#) from the device, returns the status as a number char, and needs the char array to parse
+char XS3868::parseHFPStatus(char* stat) {
+	if(stat[0] == 'M' && stat[1] == 'G') {					//make sure it's a HFP status response
+		if(stat[2] == '1') {								//ready
+			return '1';
 		}
-		else if(stat[0] == 'I' && stat[1] == 'V') {
-			connected = true;
+		else if(stat[2] == '2') {							//connecting
+			return '2';
+		}
+		else if (stat[2] > '2') {							//connected (and other, but still connected)
 			return '3';
 		}
-		else {
-			pc.printf("BT_ERROR:%s\n\r", stat);					//we got a bad response, print out the error over serial
-			return '4';												//bad response code
+	}
+	else if(stat[0] == 'I' && stat[1] == 'V') {				//if it's a state response for some reason (shouldn't ever get here)
+		return '3';
+	}
+	else {													//if it's something else
+		pc.printf("BT_ERROR:[%s]\n\r", stat);					//we got a bad response, print out the error over serial
+		return '4';											//bad response code
+	}
+}
+
+
+//parses the State status response (I--) from the device, returns the status as a number char, and needs the char array to parse
+char XS3868::parseState(char* stat) {
+	if(stat[0] == 'I') {									//ensure it's a state response
+		switch(stat[1]) {
+		case 'I':											//if the device is in pairing mode
+			return '1';										//device is ready to pair, and searching for the client
+			break;
+		case 'V':											//if the device has connected successfully
+			return '3';										//yeah
+		default:											//if we get anything else (we shouldn't I think)
+			return '4';										//throw a bterror
 		}
+	}
 }
 
 

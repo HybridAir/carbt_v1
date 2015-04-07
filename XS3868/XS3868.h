@@ -44,7 +44,8 @@ class XS3868 {
 		XS3868();
 		void init();
 		void connect();
-		char parseStatus(char* stat);
+		char parseHFPStatus(char* stat);
+		char parseState(char* stat);
 		bool getSongStatus();
 		//void disconnect();
 		bool playPause();
