@@ -47,15 +47,12 @@ class XS3868 {
 		char parseHFPStatus(char* stat);
 		char parseState(char* stat);
 		bool getSongStatus();
-		//void disconnect();
 		bool playPause();
 		bool connected;
 		bool connecting;
 		bool bypassBt;					//lets the system know if bluetooth will not be used (bypassed)
     private:
-		Timer readLimit;
 		Timer connectTimer;
-		Timer z;
 		void sendCmd(string command);
 		void flushRX();
 		bool readStat(char *data);
@@ -63,8 +60,6 @@ class XS3868 {
 		bool disconnect;
 		bool disconnecting;
 		bool gettingStatus;
-		bool response;
-		bool checking;
 		int readLength;
 };
 

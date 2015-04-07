@@ -84,158 +84,93 @@ void XS3868::init() {
 
 
 //handles connecting to the bluetooth client, call this frequently
-//might have to make it return the status later
 //give this access to pager?
 void XS3868::connect() {
-	if(!connecting) {							//need to reset some variables
+	if(!connecting) {												//need to reset some variables
 		disconnecting = false;
 		pairing = false;
 		disconnect = false;
-		gettingStatus = true;
-		connecting = true;
-		connectTimer.reset();
+		gettingStatus = true;										//begin with getting the device's current HFP status
+		connecting = true;											//we are connecting now
+		connectTimer.reset();										//get the command delay timer ready
 		connectTimer.start();
-		flushRX();
-		response = false;
-		checking = false;
+		flushRX();													//get any garbage out of the rx buffer
 	}
 
-
-
-	if(gettingStatus) {										//first part of connecting is getting the device's current status
-		if(connectTimer.read_ms() >= 1000) {				//try to get the device status every 100 ms if we don't have it yet
-			flushRX();										//get any garbage out of the buffer just in case
-			sendCmd(BT_STATUS);								//send the status request command
-			connectTimer.reset();							//get the 100ms timer reference going
+	if(gettingStatus) {												//first part of connecting is getting the device's current status
+		if(connectTimer.read_ms() >= 1000) {						//try to get the device status every 100 ms if we don't have it yet
+			flushRX();												//get any garbage out of the buffer just in case
+			sendCmd(BT_STATUS);										//send the status request command
+			connectTimer.reset();									//get the 100ms timer reference going
 		}
-		else {												//if we are waiting
+		else {														//if we are waiting
 			char stat[3];
-			if(readStat(stat)) {							//keep checking the rx buffer for a response
-				char status = parseHFPStatus(stat);			//parse the response if we got one
+			if(readStat(stat)) {									//keep checking the rx buffer for a response
+				char status = parseHFPStatus(stat);					//parse the response if we got one
 				switch(status) {
-					case '1':								//if the device is ready to pair
-					case '2':								//or if it's already connecting to the client for some strange reason
+					case '1':										//if the device is ready to pair
+					case '2':										//or if it's already connecting to the client for some strange reason
 						pc.printf("ready to pair\r\n");
-						pairing = true;						//continue onto the pairing part
+						pairing = true;								//continue onto the pairing part
 						break;
-					case '3':								//if the device has already been paired/connected
+					case '3':										//if the device has already been paired/connected
 						pc.printf("already connected\r\n");
-						disconnecting = true;				//disconnect the client to freshen things up, and go on from there
+						disconnecting = true;						//disconnect the client to freshen things up, and go on from there
 				}
-				gettingStatus = false;						//either way we got a status, we are done here
-				connectTimer.reset();						//reset the timer for the next part
+				gettingStatus = false;								//either way we got a status, we are done here
+				connectTimer.reset();								//reset the timer for the next part
 			}
 		}
 	}
-	else if(disconnecting) {								//disconnecting is optional
-		if(connectTimer.read_ms() >= 100) {					//try to get the client to disconnect every 100 ms
-			sendCmd(BT_DISCONNECTAV);						//try to disconnect the AV source first
-			sendCmd(BT_DISCONNECT);							//and then the client
-			connectTimer.reset();							//reset the 100 ms timer
+	else if(disconnecting) {										//disconnecting is optional
+		if(connectTimer.read_ms() >= 100) {							//try to get the client to disconnect every 100 ms
+			sendCmd(BT_DISCONNECTAV);								//try to disconnect the AV source first
+			sendCmd(BT_DISCONNECT);									//and then the client
+			connectTimer.reset();									//reset the 100 ms timer
 		}
-		else {												//if we are waiting
+		else {														//if we are waiting
 			char stat[3];
-			if(readStat(stat)) {							//if we got a response
-				if(stat[0] == 'I' && stat[1] == 'A') {		//if we got the disconnected response
-					pc.printf("Disconnected successfully");	//temp debug
+			if(readStat(stat)) {									//if we got a response
+				if(stat[0] == 'I' && stat[1] == 'A') {				//if we got the disconnected response
+					pc.printf("Disconnected successfully");			//temp debug
 					connectTimer.reset();
-					disconnecting = false;					//done disconnecting
-					pairing = true;							//continue onto pairing
+					disconnecting = false;							//done disconnecting
+					pairing = true;									//continue onto pairing
 				}
 				else {
-					//idk we got something weird
+					pc.printf("BT_ERROR:[%s]\n\r", stat);			//we got something weird, throw a bterror
 				}
 			}
 		}
 	}
-	else if(pairing) {										//next part of the process is pairing/connecting with the client
-		if(t.read_ms() >= 100) {							//try to pair every 100ms
-			sendCmd(BT_CONNECT);							//send the pair command
+	else if(pairing) {												//next part of the process is pairing/connecting with the client
+		if(t.read_ms() >= 100) {									//try to pair every 100ms
+			sendCmd(BT_CONNECT);									//send the pair command
 			connectTimer.reset();
 		}
 		else {
-
+			char stat[3];
+			if(readStat(stat)) {									//keep checking the rx buffer for a response
+				char status = parseState(stat);						//parse the response if we got one
+				switch(status) {
+					case '1':										//if the device is in pairing mode and searching for the client
+					case '3':										//or if we got a pairing error
+						break;										//don't do anything, just wait indefinitely
+					case '2':										//if the device successfully paired
+						pc.printf("Paired successfully\r\n");
+						pairing = false;							//done pairing
+						connecting = false;							//no longer connecting
+						connected = true;							//and we are finally connected
+						connectTimer.stop();
+						connectTimer.reset();
+						break;
+					case '3':										//if the device has already been paired/connected
+						pc.printf("already connected\r\n");
+						disconnecting = true;						//disconnect the client to freshen things up, and go on from there
+				}
+			}
 		}
-
-		if(sbt.readable()) {
-									            //pc.putc(sbt.getc());
-			char str[4];
-
-
-			//sbt.scanf("%s", str);
-			        pc.printf("I got [%s]\r\n", str);
-			        if(str[0] == 'I') {
-			        	if(str[1] == 'I') {
-			        		pc.printf("Disconnect\r\n");
-			        	}
-			        	else if(str[1] == 'V') {
-			        		pc.printf("Connected\r\n");
-			        	}
-			        }
-
-			        while (sbt.readable()) {
-			        	sbt.getc();			//clears out the last character in the buffer that scanf ignores
-			        }
-
 	}
-
-
-
-//		if(t.read_ms() >= 5000) {				//send the connect command once every second while trying to pair
-//			//sendCmd(BT_CONNECT);
-//			sendCmd(BT_STATUS);
-//			t.reset();
-//		}
-	}
-	//t.stop();
-
-
-
-
-//	if(!connected) {										//if the device is not connected to the bluetooth client
-//		//char status = getConStatus();						//get the connection status from the device
-//		char status = 1;
-//		if(status != 0) {									//if the device responded
-//			if(status == 1) {								//if the device is ready to connect
-//				if(!connecting) {							//if the connection commands have not been sent yet, send them only once
-//					while(1) {
-//						sendCmd(BT_CONNECT);					//connect to the last known paired device
-//
-//
-//						//char dataIn[3];
-//
-//						//wait(1);
-//															//status array
-//												//readStat(dataIn);
-//						while(1) {
-//							if(sbt.readable()) {
-//							            pc.putc(sbt.getc());
-//							        }
-//						}
-//					}
-//						//sendCmd(BT_CONNECTAV);					//make sure we get the audio source (?) connected too
-//
-//						//connecting = true;						//connecting is in progress
-//				}
-//			}
-//			else if(status == 2) {							//if the device is currently connecting
-//				//checking for this doesn't exactly matter, but we should probably let the user know
-//			}
-//			else if(status == 3) {						//device is connected
-//				//if we're already connected from before, we don't need to reconnect
-//				//might want to make sure a2dp and avrcp are ready do
-//				//later
-//				//connected = true;
-//			}
-//			else if(status == 4) {			//if we get a response error
-//				//go tell the user to back the fuck up
-//			}
-//		}
-//	}
-//	//else
-//		//go do something else while we wait for the device to respond
-//		//don't forget to keep spamming this when possible if you plan on connecting
-
 }
 
 
@@ -270,9 +205,10 @@ char XS3868::parseState(char* stat) {
 			return '1';										//device is ready to pair, and searching for the client
 			break;
 		case 'V':											//if the device has connected successfully
-			return '3';										//yeah
+			return '2';										//yeah
 		default:											//if we get anything else (we shouldn't I think)
-			return '4';										//throw a bterror
+			pc.printf("BT_ERROR:[%s]\n\r", stat);			//throw a bterror
+			return '3';
 		}
 	}
 }
