@@ -4,6 +4,7 @@
 #include <mbed.h>
 #include <string>
 using namespace std;
+#include "BufferedSerial.h"
 
 const string BT_PREFIX = "AT#";
 const string BT_SUFFIX = "\r\n";
@@ -53,6 +54,7 @@ class XS3868 {
     private:
 		Timer readLimit;
 		Timer connectTimer;
+		Timer z;
 		void sendCmd(string command);
 		void flushRX();
 		bool readStat(char *data);
@@ -61,6 +63,8 @@ class XS3868 {
 		bool disconnecting;
 		bool gettingStatus;
 		bool response;
+		bool checking;
+		int readLength;
 };
 
 #endif

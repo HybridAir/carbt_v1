@@ -3,7 +3,7 @@
 
 #include "XS3868.h"
 
-extern Serial sbt;					//serial comms for the XS3868
+extern BufferedSerial sbt;					//serial comms for the XS3868
 extern Serial pc;					//temp debug
 
 XS3868::XS3868() {
@@ -12,6 +12,7 @@ XS3868::XS3868() {
 	connecting = false;				//not connecting either
 	bypassBt = false;				//not bypassing bt yet
 	connecting = false;
+	readLength = 0;
 
 	sbt.baud(115200);
 	wait(1);						//give the XS3868 some time to power up
@@ -37,35 +38,31 @@ void XS3868::flushRX() {
 }
 
 
-//used to read in a status response from the device over serial, returns true if it got something, and needs a data array to fill
-//this needs to be rate limited
+//used to read in a status response from the device over serial
+//returns true if it got something, needs a long enough array to fill
 bool XS3868::readStat(char *data) {
-	pc.printf("Read attempt\r\n");
-	wait(1);
-	while(sbt.readable()) {						//if there is new data coming in through serial
-		wait(1);
-		pc.printf("Got something\r\n");
-		pc.printf("=%X\r\n", sbt.getc());
+	while(sbt.readable()) {									//while the device put something in the rx buffer
+		char in = sbt.getc();								//get a char out of the rx buffer
+
+		if(in == '\r') {									//if we got a carriage return
+			//ignore it
+		}
+		else if(in == '\n') {								//if we got a newline
+			if(readLength > 0) {							//and if we have some data already, consider it the end of the transfer
+				pc.printf("Stat got [%s]\r\n", data);		//temp debug
+				readLength = 0;								//reset this for new reads
+				flushRX();									//purge the rx buffer of any remaining data
+				return true;								//all done
+			}
+			//else, ignore it
+		}
+		else {												//else, we're probably getting useful data
+			data[readLength] = in;							//put the char into the current data array element
+			pc.printf("charin [%c]\r\n", data[readLength]);	//temp debug
+			readLength++;									//increment the readLength
+		}
 	}
-
-
-
-
-		//pc.printf("Got something\r\n");
-		 //char buffer[20];						//get the buffer ready
-
-	     ////sbt.scanf("%s", &buffer);				//get everything in
-	     //pc.printf("read: %X", buffer[0]);
-	     //pc.printf(" %X", buffer[1]);
-	     //pc.printf(" %X\r\n", buffer[2]);
-	     //strncpy(data, buffer, sizeof(data));	//get everything out of the buffer and into the data array
-
-	     return true;								//new data
-	//}
-	//else {
-	//	pc.printf("Read fail\r\n");
-	//	return false;								//no new data
-	//}
+	return false;											//if we got here, there is no data yet
 }
 
 
@@ -113,19 +110,55 @@ void XS3868::connect() {
 		connectTimer.start();
 		flushRX();
 		response = false;
+		checking = false;
+		//z.start();
 		//sbt.attach(&callback);
 	}
 
-	if(gettingStatus) {										//first part of connecting is getting the device's current status
-		if(connectTimer.read_ms() >= 1000) {				//try to get the device status every 100 ms
-			flushRX();
-			connectTimer.reset();						//reset the 100 ms timer
-			wait_ms(100);
-			sendCmd(BT_STATUS);							//send the status request command
-							char str[4];								//create an arry to store it in
-							sbt.scanf("%s", str);						//get the response in
 
-							pc.printf("Stat got [%s]\r\n", str);		//temp debug
+
+	if(gettingStatus) {										//first part of connecting is getting the device's current status
+		if(connectTimer.read_ms() >= 1000) {				//try to get the device status every 100 ms if we don't have it yet
+			flushRX();										//get any garbage out of the buffer just in case
+			sendCmd(BT_STATUS);								//send the status request command
+			connectTimer.reset();
+		}
+		else {
+			char stat[3];
+			if(readStat(stat)) {
+				if(parseStatus(stat) == '1') {
+					pc.printf("ready to pair\r\n");
+				}
+			}
+
+		}
+//			char counter = 0;
+//							char str[3];
+//
+//			while(1) {
+//
+//				while(sbt.readable()) {
+//					char in = sbt.getc();
+//					if(in == '\r' || in == '\n') {
+//						if(counter > 0) {
+//							pc.printf("Stat got [%s]\r\n", str);		//temp debug
+//						}
+//					}
+//					else {
+//						str[counter] = in;
+//						pc.printf("charin [%c]\r\n", str[counter]);
+//												counter++;
+//					}
+//
+//					//pc.putc(sbt.getc());
+//
+//
+//					//char str[4];								//create an arry to store it in
+//					//sbt.scanf("%c%c", str[0], str[1]);						//get the response in
+//					//pc.printf("Stat got [%s]\r\n", str);		//temp debug
+//				}
+//
+//			}
 
 		}
 
@@ -157,7 +190,7 @@ void XS3868::connect() {
 //				flushRX();									//clear out anything leftover in the rx buffer
 //				connectTimer.reset();						//reset the timer
 //		}
-	}
+	//}
 	else if(disconnecting) {
 		if(connectTimer.read_ms() >= 100) {				//try to get the client to disconnect every 100 ms
 			sendCmd(BT_DISCONNECTAV);
@@ -166,7 +199,7 @@ void XS3868::connect() {
 		}
 		else if(sbt.readable()) {						//if we got a response
 			char str[4];								//create an arry to store it in
-			sbt.scanf("%s", str);						//get the response in
+			//sbt.scanf("%s", str);						//get the response in
 			pc.printf("Discon got [%s]\r\n", str);		//temp debug
 			while(1) {}
 		}
@@ -204,7 +237,7 @@ void XS3868::connect() {
 			char str[4];
 
 
-			sbt.scanf("%s", str);
+			//sbt.scanf("%s", str);
 			        pc.printf("I got [%s]\r\n", str);
 			        if(str[0] == 'I') {
 			        	if(str[1] == 'I') {
