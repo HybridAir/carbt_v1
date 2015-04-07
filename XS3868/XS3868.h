@@ -43,18 +43,24 @@ class XS3868 {
 		XS3868();
 		void init();
 		void connect();
-		char getConStatus();
+		char parseStatus(char* stat);
 		bool getSongStatus();
-		void disconnect();
+		//void disconnect();
 		bool playPause();
 		bool connected;
 		bool connecting;
 		bool bypassBt;					//lets the system know if bluetooth will not be used (bypassed)
     private:
 		Timer readLimit;
+		Timer connectTimer;
 		void sendCmd(string command);
+		void flushRX();
 		bool readStat(char *data);
 		bool pairing;
+		bool disconnect;
+		bool disconnecting;
+		bool gettingStatus;
+		bool response;
 };
 
 #endif
