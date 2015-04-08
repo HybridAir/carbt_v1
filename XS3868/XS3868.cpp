@@ -23,9 +23,8 @@ XS3868::XS3868() {
 
 //sends a command to the device over serial, wants the COMMAND string
 void XS3868::sendCmd(string command) {
-	pc.printf("write attempt\r\n");
 	if(sbt.writeable()) {								//if there is room to write something
-		pc.printf("sending [%s%s%s]\r\n", BT_PREFIX.c_str(), command.c_str(), BT_SUFFIX.c_str());
+		pc.printf("sending [%s%s]\r\n\n", BT_PREFIX.c_str(), command.c_str());
 		//send the prefix, command, and suffix over serial
 		sbt.printf("%s%s%s", BT_PREFIX.c_str(), command.c_str(), BT_SUFFIX.c_str());
 	}
@@ -69,8 +68,9 @@ bool XS3868::readStat(char *data) {
 
 
 //handles connecting to the bluetooth client, call this frequently
+//returns the current status; 0: no response/searching, 1: connecting, 2: connected, 3: error
 //give this access to pager?
-void XS3868::connect() {
+int XS3868::connect() {
 	if(!connecting) {												//need to reset some variables
 		disconnecting = false;
 		pairing = false;
@@ -83,27 +83,31 @@ void XS3868::connect() {
 	}
 
 	if(gettingStatus) {												//first part of connecting is getting the device's current status
-		if(connectTimer.read_ms() >= 100) {						//try to get the device status every 100 ms if we don't have it yet
+		if(connectTimer.read_ms() >= 100) {							//try to get the device status every 100 ms if we don't have it yet
 			flushRX();												//get any garbage out of the buffer just in case
 			sendCmd(BT_STATUS);										//send the status request command
 			connectTimer.reset();									//get the 100ms timer reference going
+			return 0;												//this is effectively the end, let them know we're searching now
 		}
 		else {														//if we are waiting
 			char stat[4];
 			if(readStat(stat)) {									//keep checking the rx buffer for a response
 				char status = parseHFPStatus(stat);					//parse the response if we got one
+
+				gettingStatus = false;								//we got a status, we are done after this
+				connectTimer.reset();								//reset the timer for the next part
 				switch(status) {
 					case '1':										//if the device is ready to pair
 					case '2':										//or if it's already connecting to the client for some strange reason
 						pc.printf("ready to pair\r\n");
 						pairing = true;								//continue onto the pairing part
+						return 0;									//ready to connect, but still searching
 						break;
 					case '3':										//if the device has already been paired/connected
 						pc.printf("already connected\r\n");
 						disconnecting = true;						//disconnect the client to freshen things up, and go on from there
+						return 0;									//still "searching"
 				}
-				gettingStatus = false;								//either way we got a status, we are done here
-				connectTimer.reset();								//reset the timer for the next part
 			}
 		}
 	}
@@ -112,6 +116,7 @@ void XS3868::connect() {
 			flushRX();												//get any garbage out of the buffer just in case
 			sendCmd(BT_DISCONNECT);									//send the client disconnect command to the device
 			connectTimer.reset();									//reset the 100 ms timer
+			return 0;												//searching
 		}
 		else {														//if we are waiting
 			char stat[4];
@@ -121,18 +126,21 @@ void XS3868::connect() {
 					connectTimer.reset();
 					disconnecting = false;							//done disconnecting
 					pairing = true;									//continue onto pairing
+					return 0;										//now we are 'searching'
 				}
 				else {
-					pc.printf("BT_ERROR:[%s]\n\r", stat);			//we got something weird, throw a bterror
+					pc.printf("disconnecting BT_ERROR:[%s]\n\r", stat);			//we got something weird, throw a bterror
+					return 3;										//we have a problem
 				}
 			}
 		}
 	}
 	else if(pairing) {												//next part of the process is pairing/connecting with the client
-		if(connectTimer.read_ms() >= 100) {									//try to pair every 100ms
+		if(connectTimer.read_ms() >= 500) {									//try to pair every 100ms
 			flushRX();												//get any garbage out of the buffer just in case
 			sendCmd(BT_CONNECT);									//send the pair command
 			connectTimer.reset();
+			return 0;												//connecting
 		}
 		else {
 			char stat[4];
@@ -140,6 +148,7 @@ void XS3868::connect() {
 				char status = parseState(stat);						//parse the response if we got one
 				switch(status) {
 					case '1':										//if the device is in pairing mode and searching for the client
+						return 0;									//connecting
 						break;										//don't do anything, just wait indefinitely
 					case '2':										//if the device successfully paired
 						pc.printf("Paired successfully\r\n");
@@ -148,11 +157,16 @@ void XS3868::connect() {
 						connected = true;							//and we are finally connected
 						connectTimer.stop();
 						connectTimer.reset();
+						return 2;									//we are connected
 						break;
 					case '3':										//something weird happened
-						pc.printf("got something weird\r\n");
+						pc.printf("pairing got something weird\r\n");
+						return 3;									//we have a problem
 						break;
 				}
+			}
+			else {
+				return 0;											//searching still
 			}
 		}
 	}
@@ -239,7 +253,7 @@ int XS3868::getSongStatus() {
 			if(stat[1] == 'A') {
 				return 1;											//playing
 			}
-			else if(state[1] == 'B') {
+			else if(stat[1] == 'B') {
 				return 2;											//pasued
 			}
 			else {
@@ -261,6 +275,7 @@ int XS3868::getSongStatus() {
 
 
 //toggles the music play/pause status on the bt client, returns the new status (true = playing, false = paused)
+//fix me
 bool XS3868::playPause() {
 
 	sendCmd(BT_PLAYPAUSE);

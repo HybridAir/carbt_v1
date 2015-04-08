@@ -42,7 +42,7 @@ const string BT_BT_O_STATE_PAIRING_OFF = "IJ2";
 class XS3868 {
     public:
 		XS3868();
-		void connect();
+		int connect();
 		int getHFPStatus();
 		int getSongStatus();
 		bool playPause();
