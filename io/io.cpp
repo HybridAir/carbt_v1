@@ -109,8 +109,11 @@ void io::connectionLed(char status) {
 		}
 		conLed = conLedPwm;										//update the led with the new pwm
 	}
-	else {														//if the XS3868 is connected
-		conLed = 1;												//keep the led completely on
+	else if(status == 2) {										//if it's connected
+		conLed = 1;												//keep the led on
+	}
+	else {														//if we got an error or want to bypass or something
+		conLed = 0;												//keep the led off
 	}
 }
 
