@@ -98,13 +98,13 @@ void XS3868::connect() {
 	}
 
 	if(gettingStatus) {												//first part of connecting is getting the device's current status
-		if(connectTimer.read_ms() >= 1000) {						//try to get the device status every 100 ms if we don't have it yet
+		if(connectTimer.read_ms() >= 100) {						//try to get the device status every 100 ms if we don't have it yet
 			flushRX();												//get any garbage out of the buffer just in case
 			sendCmd(BT_STATUS);										//send the status request command
 			connectTimer.reset();									//get the 100ms timer reference going
 		}
 		else {														//if we are waiting
-			char stat[3];
+			char stat[4];
 			if(readStat(stat)) {									//keep checking the rx buffer for a response
 				char status = parseHFPStatus(stat);					//parse the response if we got one
 				switch(status) {
@@ -125,15 +125,14 @@ void XS3868::connect() {
 	else if(disconnecting) {										//disconnecting is optional
 		if(connectTimer.read_ms() >= 100) {							//try to get the client to disconnect every 100 ms
 			flushRX();												//get any garbage out of the buffer just in case
-			sendCmd(BT_DISCONNECTAV);								//try to disconnect the AV source first
-			sendCmd(BT_DISCONNECT);									//and then the client
+			sendCmd(BT_DISCONNECT);									//send the client disconnect command to the device
 			connectTimer.reset();									//reset the 100 ms timer
 		}
 		else {														//if we are waiting
-			char stat[3];
+			char stat[4];
 			if(readStat(stat)) {									//if we got a response
 				if(stat[0] == 'I' && stat[1] == 'A') {				//if we got the disconnected response
-					pc.printf("Disconnected successfully");			//temp debug
+					pc.printf("Disconnected successfully\r\n");			//temp debug
 					connectTimer.reset();
 					disconnecting = false;							//done disconnecting
 					pairing = true;									//continue onto pairing
@@ -145,18 +144,17 @@ void XS3868::connect() {
 		}
 	}
 	else if(pairing) {												//next part of the process is pairing/connecting with the client
-		if(t.read_ms() >= 100) {									//try to pair every 100ms
+		if(connectTimer.read_ms() >= 100) {									//try to pair every 100ms
 			flushRX();												//get any garbage out of the buffer just in case
 			sendCmd(BT_CONNECT);									//send the pair command
 			connectTimer.reset();
 		}
 		else {
-			char stat[3];
+			char stat[4];
 			if(readStat(stat)) {									//keep checking the rx buffer for a response
 				char status = parseState(stat);						//parse the response if we got one
 				switch(status) {
 					case '1':										//if the device is in pairing mode and searching for the client
-					case '3':										//or if we got a pairing error
 						break;										//don't do anything, just wait indefinitely
 					case '2':										//if the device successfully paired
 						pc.printf("Paired successfully\r\n");
@@ -166,9 +164,9 @@ void XS3868::connect() {
 						connectTimer.stop();
 						connectTimer.reset();
 						break;
-					case '3':										//if the device has already been paired/connected
-						pc.printf("already connected\r\n");
-						disconnecting = true;						//disconnect the client to freshen things up, and go on from there
+					case '3':										//something weird happened
+						pc.printf("got something weird\r\n");
+						break;
 				}
 			}
 		}
@@ -201,29 +199,28 @@ char XS3868::parseHFPStatus(char* stat) {
 
 //returns the current HFP status, needs to be called frequently if you want a prompt response
 int XS3868::getHFPStatus() {
-		char stat[3];
-		if(readStat(stat)) {									//if we got a response
-			char status = parseHFPStatus(stat);					//parse the response
-			switch(status) {
-				case '1':										//if the device is ready to pair
-					return 1;
-					break;
-				case '2':										//if the device is connecting
-					return 2;
-					break;
-				case '3':										//if the device is connected
-					return 3;
-					break;
-				case '4':										//if we got a parse error
-					return 4;									//let them deal with it
-					break;
-			}
+	char stat[4];
+	if(readStat(stat)) {									//if we got a response
+		char status = parseHFPStatus(stat);					//parse the response
+		switch(status) {
+			case '1':										//if the device is ready to pair
+				return 1;
+				break;
+			case '2':										//if the device is connecting
+				return 2;
+				break;
+			case '3':										//if the device is connected
+				return 3;
+				break;
+			case '4':										//if we got a parse error
+				return 4;									//let them deal with it
+				break;
 		}
-		else {													//if there is nothing yet
-			flushRX();											//get any garbage out of the buffer just in case
-			sendCmd(BT_STATUS);									//try to get the HFP status
-			return 0;											//no response yet
-		}
+	}
+	else {													//if there is nothing yet
+		flushRX();											//get any garbage out of the buffer just in case
+		sendCmd(BT_STATUS);									//try to get the HFP status
+		return 0;											//no response yet
 	}
 }
 
@@ -247,7 +244,7 @@ char XS3868::parseState(char* stat) {
 
 //returns whether music is playing or not
 bool XS3868::getSongStatus() {
-	char dataIn[2];									//status array
+	char dataIn[3];									//status array
 	sendCmd(BT_CONNECTAV);								//send the State Query commands (CY)
 	pc.printf("send\r\n");
 	if(readStat(dataIn)) {							//if we got a response
