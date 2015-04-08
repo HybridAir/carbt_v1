@@ -251,10 +251,10 @@ int XS3868::getSongStatus() {
 	if(readStat(stat)) {											//if we got a response
 		if(stat[0] == 'M') {										//make sure it's the right response type
 			if(stat[1] == 'A') {
-				return 1;											//playing
+				return 2;											//playing
 			}
 			else if(stat[1] == 'B') {
-				return 2;											//pasued
+				return 1;											//pasued
 			}
 			else {
 				pc.printf("getSongStatus BT_ERROR:[%s]\n\r", stat);
@@ -274,12 +274,12 @@ int XS3868::getSongStatus() {
 }
 
 
-//toggles the music play/pause status on the bt client, returns the new status (true = playing, false = paused)
-//fix me
+//toggles the music play/pause status on the bt client, returns true is playing, else paused
 bool XS3868::playPause() {
-
 	sendCmd(BT_PLAYPAUSE);
-	char dataIn[3];					//status array
+	wait_ms(50);										//wait for the device to respond
+	char dataIn[3];
+
 	readStat(dataIn);
 	if(dataIn[1] == 'A') {
 		return false;
@@ -288,4 +288,23 @@ bool XS3868::playPause() {
 		return true;
 	}
 
+}
+
+
+//stops the music, returns if it was successful, needs to be called until you get a response
+bool XS3868::stopMusic() {
+	char stat[3];
+	if(readStat(stat)) {											//if we got a response
+		if(stat[0] == 'M' && stat[1] == 'A') {
+			return true;
+		}
+		else {
+			pc.printf("stopMusic BT_ERROR:[%s]\n\r", stat);
+			return false;
+		}
+	}
+	else {
+		sendCmd(BT_STOP);
+		return false;
+	}
 }

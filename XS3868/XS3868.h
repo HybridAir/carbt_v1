@@ -46,6 +46,7 @@ class XS3868 {
 		int getHFPStatus();
 		int getSongStatus();
 		bool playPause();
+		bool stopMusic();
 		bool connected;
 		bool connecting;
 		bool bypassBt;					//lets the system know if bluetooth will not be used (bypassed)
