@@ -82,12 +82,9 @@ bool io::btnReadAll() {
 }
 
 
-//used to control the connection led, needs the XS3868 status number, and must be called continuously if you want good fading
+//controls the connection led, needs the XS3868 status number, and must be called continuously if you want good fading
 void io::connectionLed(char status) {
-	if(status == 0) {											//if the XS3868 is not responding
-		conLed = 0;												//keep the connection led off
-	}
-	else if(status == 1 || status == 2) {						//if the XS3868 is searching or connecting
+	if(status == 0 || status == 1) {							//if the XS3868 is searching or connecting
 		//the following is used to fade the connection led on and off, becuase it looks cool
 		if(readyConPwm) {										//if we're ready to change the pwm
 			if(conIncreasing) {									//if the pwm value is currently increasing
@@ -105,7 +102,7 @@ void io::connectionLed(char status) {
 			readyConPwm = false;								//need to wait until we can change the pwm again
 			timeConLed.start();									//start the wait timer
 		}
-		else if(timeConLed.read_ms() >= 10) {					//wait until it has been 10 ms
+		else if(timeConLed.read_ms() >= 20) {					//wait until it has been 10 ms
 			readyConPwm = true;									//ready to change the pwm now
 			timeConLed.stop();									//stop and reset the timer
 			timeConLed.reset();
