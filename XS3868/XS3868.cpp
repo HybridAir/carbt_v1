@@ -1,10 +1,12 @@
 //used for controlling the OVC3860 based XS3868 board
-//TODO: song control, pairing, status, MAKE SENDCMD ALWAYS RETURN A STATUS STRING (all commands return something)
+//TODO: song control
 
 #include "XS3868.h"
 
+
 extern BufferedSerial sbt;					//serial comms for the XS3868
-extern Serial pc;					//temp debug
+extern Serial pc;							//temp debug
+
 
 XS3868::XS3868() {
 	pc.printf("\n\rcarbt_v2--------------------------------------------\n\r");
@@ -19,27 +21,27 @@ XS3868::XS3868() {
 }
 
 
-//used to send a command to the device over serial, wants the COMMAND string
+//sends a command to the device over serial, wants the COMMAND string
 void XS3868::sendCmd(string command) {
-	//send the prefix, command, and suffix over serial
 	pc.printf("write attempt\r\n");
-	if(sbt.writeable()) {
-		pc.printf("sending: %s%s%s\r\n", BT_PREFIX.c_str(), command.c_str(), BT_SUFFIX.c_str());
+	if(sbt.writeable()) {								//if there is room to write something
+		pc.printf("sending [%s%s%s]\r\n", BT_PREFIX.c_str(), command.c_str(), BT_SUFFIX.c_str());
+		//send the prefix, command, and suffix over serial
 		sbt.printf("%s%s%s", BT_PREFIX.c_str(), command.c_str(), BT_SUFFIX.c_str());
 	}
 }
 
 
-//used to clear out the RX hardware buffer
+//clears out the RX buffer
 void XS3868::flushRX() {
-	while (sbt.readable()) {
-		sbt.getc();
+	while (sbt.readable()) {							//while there is stuff in the buffer
+		sbt.getc();										//read it out to infinity
 	}
 }
 
 
-//used to read in a status response from the device over serial
-//returns true if it got something, needs a long enough array to fill
+//reads in a status response from the device over serial
+//returns true if it got something, needs a char array of the correct size to fill
 bool XS3868::readStat(char *data) {
 	while(sbt.readable()) {									//while the device put something in the rx buffer
 		char in = sbt.getc();								//get a char out of the rx buffer
@@ -63,23 +65,6 @@ bool XS3868::readStat(char *data) {
 		}
 	}
 	return false;											//if we got here, there is no data yet
-}
-
-
-//prepares the device for operation
-//temp, probably dont need you
-void XS3868::init() {
-	connect();
-	if(connected) {
-		//wait before doing any music commands, the client has to catch up
-		wait(2);
-	sendCmd(BT_PLAYPAUSE);
-	wait(10);
-	sendCmd(BT_DISCONNECTAV);
-	sendCmd(BT_DISCONNECT);
-	//wait(20);
-	}
-
 }
 
 
@@ -175,6 +160,7 @@ void XS3868::connect() {
 
 
 //parses the HFP status response (MG#) from the device, returns the status as a number char, and needs the char array to parse
+//make this return an int
 char XS3868::parseHFPStatus(char* stat) {
 	if(stat[0] == 'M' && stat[1] == 'G') {					//make sure it's a HFP status response
 		if(stat[2] == '1') {								//ready
@@ -198,6 +184,7 @@ char XS3868::parseHFPStatus(char* stat) {
 
 
 //returns the current HFP status, needs to be called frequently if you want a prompt response
+//make this return an int
 int XS3868::getHFPStatus() {
 	char stat[4];
 	if(readStat(stat)) {									//if we got a response
@@ -226,6 +213,7 @@ int XS3868::getHFPStatus() {
 
 
 //parses the State status response (I--) from the device, returns the status as a number char, and needs the char array to parse
+//make this return an int
 char XS3868::parseState(char* stat) {
 	if(stat[0] == 'I') {									//ensure it's a state response
 		switch(stat[1]) {
@@ -242,31 +230,34 @@ char XS3868::parseState(char* stat) {
 }
 
 
-//returns whether music is playing or not
-bool XS3868::getSongStatus() {
-	char dataIn[3];									//status array
-	sendCmd(BT_CONNECTAV);								//send the State Query commands (CY)
-	pc.printf("send\r\n");
-	if(readStat(dataIn)) {							//if we got a response
-		//pc.printf("stat:%s\r\n", dataIn);
-		if(dataIn[0] == 'M') {			//make sure it's the correct response type
-			if(dataIn[1] == 'A') {
-				return false;
+//returns whether music is playing or not, 0: no response, 1: playing, 2: paused
+//call it frequently for a prompt response
+int XS3868::getSongStatus() {
+	char stat[3];
+	if(readStat(stat)) {											//if we got a response
+		if(stat[0] == 'M') {										//make sure it's the right response type
+			if(stat[1] == 'A') {
+				return 1;											//playing
+			}
+			else if(state[1] == 'B') {
+				return 2;											//pasued
 			}
 			else {
-				return true;
+				pc.printf("getSongStatus BT_ERROR:[%s]\n\r", stat);
+				return 0;											//got something weird, throw the bterror
 			}
 		}
+		else {
+			pc.printf("getSongStatus BT_ERROR:[%s]\n\r", stat);
+			return 0;												//got something weird, throw the bterror
+		}
 	}
-	pc.printf("done\r\n");
-
-	return false;
+	else {															//if there is nothing yet
+		flushRX();													//get any garbage out of the buffer just in case
+		sendCmd(BT_CONNECTAV);										//try to get the song status
+		return 0;													//no response yet
+	}
 }
-
-
-//void XS3868::disconnect() {
-//	sendCmd(BT_RESET);
-//}
 
 
 //toggles the music play/pause status on the bt client, returns the new status (true = playing, false = paused)
