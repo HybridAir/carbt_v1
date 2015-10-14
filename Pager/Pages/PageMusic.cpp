@@ -7,10 +7,13 @@
 
 extern Serial pc;
 
+
 //default constructor, needs the lcd and io objects
 PageMusic::PageMusic(TextLCD_SPI_N& lcdIn, LcdUtils& utilsIn, io& ioIn, XS3868& btIn) : bt(btIn), lcd(lcdIn), inout(ioIn), utils(utilsIn) {
 	musicMode = true;
 	prevMusicMode = true;						//used for keeping track of mode changes
+	songStatus = 0;
+	songStatTimer.start();
 }
 
 
@@ -18,6 +21,8 @@ PageMusic::PageMusic(TextLCD_SPI_N& lcdIn, LcdUtils& utilsIn, io& ioIn, XS3868& 
 void PageMusic::showPage(bool first) {
 	if(first) {								//if this page is being shown for the first time (device was just turned on, new page, etc)
 		lcd.cls();
+		lcd.locate(0,1);
+		lcd.printf("Stopped");
 	}
 
 	if(btnMon() == 4) {						//if the mode button was just pressed
@@ -52,12 +57,14 @@ void PageMusic::showPage(bool first) {
 //handles the music mode operation
 void PageMusic::doMusic() {
 	if(btnMon() == 1) {					//if the play/pause button was pressed
+		utils.clearRow(1);
 		lcd.locate(0,1);
+
 		if(bt.playPause()) {
-			lcd.printf("playing");
+			lcd.printf("Playing");
 		}
 		else {
-			lcd.printf("paused");
+			lcd.printf("Paused");
 		}
 	}
 }
@@ -72,11 +79,15 @@ void PageMusic::doFreq() {
 //displays the currently music status and fm frequency on the buttom row
 void PageMusic::status() {
 	lcd.locate(0,1);
+	if(songStatTimer.read_ms() >= 500) {
+		songStatus = bt.getSongStatus();
+		songStatTimer.reset();
+	}
 
-	if(bt.getSongStatus()) {
+	if(songStatus == 1) {
 		lcd.printf("Playing");
 	}
-	else {
+	else if(songStatus == 2) {
 		lcd.printf("Paused");
 	}
 

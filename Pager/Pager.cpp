@@ -66,13 +66,19 @@ void Pager::connecting() {
 }
 
 void Pager::connected() {
-	//Display disp2(lcd);
-
 	lcd.cls();
 	lcd.locate(0, 0);
 	utils.centerText("Connection");
 	lcd.locate(0, 1);
 	utils.centerText("Successful");
+}
+
+void Pager::disconnected() {
+	lcd.cls();
+	lcd.locate(0, 0);
+	utils.centerText("Bluetooth");
+	lcd.locate(0, 1);
+	utils.centerText("Disconnected");
 }
 
 

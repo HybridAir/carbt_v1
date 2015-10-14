@@ -32,6 +32,7 @@ class Pager {
 
 		void search();
 		void connecting();
+		void disconnected();
 		void connected();
 		void bterror();
 		bool askBypassBt();

@@ -43,6 +43,7 @@ class XS3868 {
     public:
 		XS3868();
 		int connect();
+		void flushRX();
 		int getHFPStatus();
 		int getSongStatus();
 		bool playPause();
@@ -53,8 +54,8 @@ class XS3868 {
     private:
 		Timer connectTimer;
 		void sendCmd(string command);
-		void flushRX();
 		bool readStat(char *data);
+		void checkConnection();
 		char parseHFPStatus(char* stat);
 		char parseState(char* stat);
 		bool pairing;

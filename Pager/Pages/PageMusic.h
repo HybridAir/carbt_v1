@@ -26,6 +26,8 @@ class PageMusic {
 		LcdUtils& utils;
 		io& inout;
 		XS3868& bt;
+		Timer songStatTimer;
+		char songStatus;
 		bool musicMode;
 		bool prevMusicMode;
 		//char currentBtn;

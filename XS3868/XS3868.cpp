@@ -1,5 +1,5 @@
 //used for controlling the OVC3860 based XS3868 board
-//TODO: song control
+//TODO: connection monitor
 
 #include "XS3868.h"
 
@@ -14,6 +14,7 @@ XS3868::XS3868() {
 	connecting = false;				//not connecting either
 	bypassBt = false;				//not bypassing bt yet
 	connecting = false;
+	gettingStatus = true;
 	readLength = 0;
 
 	sbt.baud(115200);
@@ -23,6 +24,13 @@ XS3868::XS3868() {
 
 //sends a command to the device over serial, wants the COMMAND string
 void XS3868::sendCmd(string command) {
+	//CHECK IF WE ARE STILL CONNECTED HERE FIRST
+//	if(!connecting) {								//make sure we are not currently connecting (so it can do its commands without problems)
+//		checkConnection();							//check the connection
+//	}
+
+
+
 	if(sbt.writeable()) {								//if there is room to write something
 		pc.printf("sending [%s%s]\r\n\n", BT_PREFIX.c_str(), command.c_str());
 		//send the prefix, command, and suffix over serial
@@ -90,7 +98,7 @@ int XS3868::connect() {
 			return 0;												//this is effectively the end, let them know we're searching now
 		}
 		else {														//if we are waiting
-			char stat[4];
+			char stat[5];
 			if(readStat(stat)) {									//keep checking the rx buffer for a response
 				char status = parseHFPStatus(stat);					//parse the response if we got one
 
@@ -152,6 +160,7 @@ int XS3868::connect() {
 						break;										//don't do anything, just wait indefinitely
 					case '2':										//if the device successfully paired
 						pc.printf("Paired successfully\r\n");
+						sendCmd(BT_CONNECTAV);
 						pairing = false;							//done pairing
 						connecting = false;							//no longer connecting
 						connected = true;							//and we are finally connected
@@ -173,6 +182,29 @@ int XS3868::connect() {
 }
 
 
+//checks if the client is connected or not, tries to reconnect if not
+void XS3868::checkConnection() {
+	connecting = true;						//not connecting yet, but make it true so we can still send commands
+	pc.printf("checking connected\r\n");
+
+	sendCmd(BT_STATUS);
+	wait_ms(50);										//wait for the device to respond
+	char dataIn[4];
+
+	readStat(dataIn);
+	char status = parseHFPStatus(dataIn);					//parse the response if we got one
+
+	if(status >= 2 || status == 4) {								//not connected
+		pc.printf("not connected anymore\r\n");
+	}
+	else {															//connected
+		pc.printf("still connected\r\n");
+	}
+
+	connecting = false;
+}
+
+
 //parses the HFP status response (MG#) from the device, returns the status as a number char, and needs the char array to parse
 //make this return an int
 char XS3868::parseHFPStatus(char* stat) {
@@ -191,7 +223,7 @@ char XS3868::parseHFPStatus(char* stat) {
 		return '3';
 	}
 	else {													//if it's something else
-		pc.printf("BT_ERROR:[%s]\n\r", stat);					//we got a bad response, print out the error over serial
+		pc.printf("parseHFPStatus BT_ERROR:[%s]\n\r", stat);					//we got a bad response, print out the error over serial
 		return '4';											//bad response code
 	}
 }

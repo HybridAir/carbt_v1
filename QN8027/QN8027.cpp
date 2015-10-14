@@ -4,6 +4,7 @@
 #include "QN8027.h"
 
 extern I2C i2c;
+extern Serial pc;
 
 QN8027::QN8027(char crysSource, char crysFreq, bool isMono, bool enIdle) {
 	this->crysSource = crysSource;
@@ -12,16 +13,16 @@ QN8027::QN8027(char crysSource, char crysFreq, bool isMono, bool enIdle) {
 	this->enIdle = enIdle;
 
 
-    printf("Searching for I2C devices...");
+    pc.printf("Searching for I2C devices...");
 
     int count = 0;
     for (int address=0; address<256; address+=2) {
         if (!i2c.write(address, NULL, 0)) { // 0 returned is ok
-            printf(" - I2C device found at address 0x%02X\n", address);
+        	pc.printf(" - I2C device found at address 0x%02X\n", address);
             count++;
         }
     }
-    printf("%d devices found\n", count);
+    pc.printf("%d devices found\n", count);
 
 //	char wrout[] = {0x04};
 //	int reg = i2c.write(ADDRESS, wrout, 1);
