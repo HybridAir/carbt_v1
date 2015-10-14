@@ -1,0 +1,1 @@
+All this stuff goes into the attiny44 in the display module
