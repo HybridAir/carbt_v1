@@ -97,7 +97,7 @@ def getButton():
 	ser.write(chr(BTN_READ_REG))		#ask the device for the last pressed button(s)
 	response = ser.read()
 	response = ord(response)
-	if (response & 0x80) == 128:
+	if (response & 0x08) == 8:
 		return 4
 	elif (response & 0x01) == 1:
 		return 1
