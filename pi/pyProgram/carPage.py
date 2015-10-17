@@ -11,17 +11,12 @@ import subprocess
 
 class Page(threading.Thread):
 	
-	# data0 = [('COOLANT_TEMP', 'TMP', 'C') , ('RPM', 'RPM', ''),('MPG', 'MPG', ''), ('GEAR', 'GEAR', '')]
-	# data1 = [('ENGINE_LOAD', 'LOAD', '%') , ('SPEED', 'SPD', ''),('MPG', 'MPG', ''), ('THROTTLE_POS', 'THRT', '%')]
-	# data1 = [('VOLTAGE', 'VOLT', 'V') , ('FUEL_RATE', 'FUEL', 'G/H'),('INTAKE_TEMP', 'INT', 'C'), ('', '', '')]
-	
 	subpage = ( [('COOLANT_TEMP', 'TMP', 'C') , ('RPM', '', ' RPM'),('MPG', '', ' MPG'), ('GEAR', 'GEAR', '')],
+		  [('COOLANT_TEMP', 'TMP', 'C') , ('COOLANT_TEMP', 'TMP', 'C'),('COOLANT_TEMP', 'TMP', 'C'), ('COOLANT_TEMP', 'TMP', 'C')],
 		  [('ENGINE_LOAD', 'LOAD', '%') , ('SPEED', '', ' MPH'),('MPG', '', ' MPG'), ('THROTTLE_POS', 'THR', '%')],
 		  [('VOLTAGE', '', ' V') , ('FUEL_RATE', '', ' GPH'),('INTAKE_TEMP', 'INTMP', 'C'), ('', '', '')] )
 	
-	#subpages = (data0, data1, data2)
-	subpageIndex = 0									#default and current subpage
-	#currentSubpage = self.subpages[self.subpageIndex]
+	subpageIndex = 1								#default and current subpage
 	
 	adaptorMAC = "AA:BB:CC:11:22:33"		#the mac address of the obd2 adapter
 	adapterPort = "/dev/rfcomm1"
@@ -36,12 +31,12 @@ class Page(threading.Thread):
 	def __init__(self):
 		threading.Thread.__init__(self)
 		
-		#obd.debug.console = True
+		obd.debug.console = True
 		
 		self.prevButton = None				
 		self.exitNow = False
-		#self.btportBound = False
-		self.btportBound = True
+		self.btportBound = False
+		#self.btportBound = True
 		self.obdConnection = None
 		self.previouslyConnected = False
 		
@@ -52,6 +47,9 @@ class Page(threading.Thread):
 		lcd.lcdWrite("to OBD Reader...")
 		
 		#self.obdConnection = obd.OBD(self.adapterPort)		#start a new obd instance
+		
+		self.bindBtport()				#need to move this into a loop
+		
 		self.obdConnection = obd.Async(self.adapterPort)
 		
 		print("Car page ready to go")
@@ -61,17 +59,17 @@ class Page(threading.Thread):
 		#runs the page, call this continuously for smooth operation
 	def run(self):
 		while(1):
-			if not self.btportBound:
-				self.bindBtport()
-			# elif not self.obdConnection.is_connected():
-				# if self.previouslyConnected:
-					# self.previouslyConnected = False
+			# if not self.btportBound:
+				# self.bindBtport()
+			if not self.obdConnection.is_connected():
+				if self.previouslyConnected:
+					self.previouslyConnected = False
 					
-					# lcd.lcdClear()
-					# lcd.lcdSetCursor(0,0)
-					# lcd.lcdWrite("  Reconnecting  ")
-					# lcd.lcdSetCursor(0,1)
-					# lcd.lcdWrite("to OBD Reader...")
+					lcd.lcdClear()
+					lcd.lcdSetCursor(0,0)
+					lcd.lcdWrite("  Reconnecting  ")
+					lcd.lcdSetCursor(0,1)
+					lcd.lcdWrite("to OBD Reader...")
 			else:
 				if self.previouslyConnected == False:
 					self.previouslyConnected = True
@@ -130,22 +128,22 @@ class Page(threading.Thread):
 		name = commandTuple[1]
 		unit = commandTuple[2]
 	
-		if command == "GEAR":
-			# self.obdConnection.port.send_and_parse("ATSH 6C10F1")
+		# if command == "GEAR":
+			# # self.obdConnection.port.send_and_parse("ATSH 6C10F1")
 			
-			# command = obd.OBDCommand("GEAR", "Gear", "", "22199A01", 2, self.decodeGear)
-			# response = self.obdConnection.query(command, True) # send the command, and parse the response
-			pass
-		elif command == "MPG":
-			pass
-		elif command == "VOLTAGE":
-			pass
-		elif command == "":
-			pass
-		else:
-			cmd = obd.commands[command]
-			response = self.obdConnection.query(cmd) # send the command, get the response
-			value = response.value
+			# # command = obd.OBDCommand("GEAR", "Gear", "", "22199A01", 2, self.decodeGear)
+			# # response = self.obdConnection.query(command, True) # send the command, and parse the response
+			# pass
+		# elif command == "MPG":
+			# pass
+		# elif command == "VOLTAGE":
+			# pass
+		# elif command == "":
+			# pass
+		# else:
+		cmd = obd.commands[command]
+		response = self.obdConnection.query(cmd) # send the command, get the response
+		value = response.value
 			
 		if value == None:
 			value = '--'
@@ -165,8 +163,8 @@ class Page(threading.Thread):
 			lcd.lcdWrite(output)
 			
 			
-	def decodeGear(self, _hex):
-		return (_hex[3:], "current gear")
+	# def decodeGear(self, _hex):
+		# return (_hex[3:], "current gear")
 			
 			
 	def nextDataPage(self):
@@ -192,8 +190,9 @@ class Page(threading.Thread):
 		self.obdConnection.unwatch_all()		#unwatch all previous 
 		
 		for sensor in currentSubpage: 
-			print(str(sensor[0]))
-			self.obdConnection.watch(sensor[0], callback=None, force=True)	
+			#print(str(sensor[0]))
+			command = obd.commands[sensor[0]]
+			self.obdConnection.watch(command, callback=None, force=True)	
 		
 		self.obdConnection.start()				#start the async
 		
@@ -202,7 +201,6 @@ class Page(threading.Thread):
 	
 	#processes button presses
 	def __processBtn(self, button):
-		print("beep")
 		if button != None:
 			if button != self.prevButton:
 				self.prevButton = button
