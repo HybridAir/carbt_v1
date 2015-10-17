@@ -6,13 +6,14 @@
 #define LED_PIN				5
 #define F_CPU 8000000UL
 
-//buttons are on attiny84 pins 10, 9, 0, 1
-//or pb0, pb1, pa0, pa1
+//buttons are on attiny84 pins 10, 9, 8, 7
+//or pb0, pb1, pb2, pa7
 
 void ioInit() {
 	//DDRB |= 0x03;		//set pb0 and pb1 as inputs
 	//DDRA |= 0x03;		//set pa0 and pa1 as inputs
-	DDRA |= 0x80;
+	DDRA |= 0x08;
+	//DDRA |= 0x80;
 	DDRB |= 0x07;
 	
 	//set default led brightness and stuff
@@ -26,7 +27,8 @@ void writeLED(uint8_t brightness) {
 
 //checks each button for any updates, run this very often
 void updateButtons() {
-	uint8_t newBtn = (PINB & 0x07) | (PINA & 0x80);
+	//uint8_t newBtn = (PINB & 0x07) | (PINA & 0x80);
+	uint8_t newBtn = (PINB & 0x07) | (PINA & 0x08);
 	
 	if(newBtn > 0) {
 		btnOut = newBtn;
