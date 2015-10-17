@@ -2,7 +2,7 @@
 
 //communications registers
 #define BTN_READ_REG		0x01
-#define LDR_READ_REG 		0x02
+//#define LDR_READ_REG 		0x02
 //#define TEMP_READ_REG 		0x03
 #define LED_WRITE_REG 		0x04
 #define CONTRAST_WRITE_REG	0x05
@@ -44,21 +44,21 @@ void checkCommand() {
 			//byte command = mySerial.read();				//read the data out of the buffer
 			byte command = softSerialRead();
 			int tempOut;
-			int ldrOut;
+			//int ldrOut;
 			switch(command) {								//do something depending on the received command
 				case BTN_READ_REG:						//button status request
 					//mySerial.write(btnOut);				//send the last pressed button to the pi
 					softSerialWrite(btnOut);
 					btnOut = 0x00;						//reset the button variable
 					break;
-				case LDR_READ_REG:						//LDR value request
-					//mySerial.write(updateLDR());		//send the current light level
+/* 				case LDR_READ_REG:						//LDR value request
+					// mySerial.write(updateLDR());		//send the current light level
 					ldrOut = updateLDR();
-					//mySerial.write(lowByte(ldrOut));
-					//mySerial.write(highByte(ldrOut));
+					// mySerial.write(lowByte(ldrOut));
+					// mySerial.write(highByte(ldrOut));
 					softSerialWrite(lowByte(ldrOut));
 					softSerialWrite(highByte(ldrOut));
-					break;
+					break; */
 /* 				case TEMP_READ_REG:
 					//mySerial.write(updateTemp());
 					tempOut = updateTemp();

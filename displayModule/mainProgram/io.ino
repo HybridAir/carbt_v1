@@ -49,12 +49,12 @@ void updateButtons() {
 
 
 //updates the ldr, and returns its reading
-int updateLDR() {
+/* int updateLDR() {
 	//analogRead(LDR_PIN);
 	//uint8_t ldrRead = map(analogRead(LDR_PIN), 0, 1023, 0, 255);
 	//return ldrRead;
 	return analogRead(LDR_PIN);
-}
+} */
 
 //updates the tmp36, and returns its reading in Celsius
 /* int updateTemp() {
