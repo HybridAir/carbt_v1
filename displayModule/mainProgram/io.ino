@@ -12,28 +12,33 @@
 void ioInit() {
 	//DDRB |= 0x03;		//set pb0 and pb1 as inputs
 	//DDRA |= 0x03;		//set pa0 and pa1 as inputs
-	DDRA |= 0x08;
 	//DDRA |= 0x80;
-	DDRB |= 0x07;
+	
+	//DDRA |= 0x08;
+	//DDRB |= 0x07;
+	
+	DDRA |= 0x77;		//pa3 and pa7 are inputs, everything else is output
+	DDRB |= 0xFC;		//pb0 and pb1 are inputs, everything else are outputs
 	
 	//set default led brightness and stuff
 }
 
 
 void writeLED(uint8_t brightness) {
-	analogWrite(LED_PIN, brightness);
+	//analogWrite(LED_PIN, brightness);
+	OCR1B = brightness;
 }
 
 
 //checks each button for any updates, run this very often
 void updateButtons() {
 	//uint8_t newBtn = (PINB & 0x07) | (PINA & 0x80);
-	uint8_t newBtn = (PINB & 0x07) | (PINA & 0x08);
+	uint8_t newBtn = (PINB & 0x03) | (PINA & 0x88);
 	
 	if(newBtn > 0) {
 		btnOut = newBtn;
 	}
-	//btnOut = (PINB & 0x3) | ((PINA & 0x3) << 6);		//get the current values of pb0-1 and pa0-1, then AND them
+	//btnOut = (PINB & 0x3) | ((PINA & 0x3) << 6);		//get the current values of pb0-1 and pa0-1, then OR them
 	//you will get a byte like xx0000xx
 	//first two x's are the pina values, then pinb	
 	//lcd.setCursor(0,0);

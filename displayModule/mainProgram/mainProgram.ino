@@ -48,6 +48,16 @@ void setup() {
 
 	ioInit();
 	commsInit();
+	
+	//red led pwm on pb2 oc0a
+	TCCR0A = (1<<COM0A1)|(1<<WGM00);  // mode #1
+	//TCCR0B = (2<<CS00);  // div8 (any speed would do)
+	OCR0A = 255;
+	
+	//lcd led on pa5 oc1b
+	TCCR1A = (1<<COM1B1)|(1<<WGM10);  // mode #1
+	//OCR1B = 10;
+	
 }
  
 void loop() {
