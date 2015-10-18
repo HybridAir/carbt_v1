@@ -25,6 +25,11 @@ class Page(threading.Thread):
 	BtnMon = lcd.BtnChecker(btnPollRate)
 	scrollSpeed = .15
 	
+	#car specific values needed for MPG calculation
+	volumetricEfficiency = 85		#percentage
+	engineDisplacement = 2.4 		#in liters
+	mpgTrim = .91					#becuase I was still getting the wrong MPG
+	
 	#adaptorConnected = False
 	adaptorConnected = True
 	
@@ -124,10 +129,13 @@ class Page(threading.Thread):
 		command = commandTuple[0]
 		name = commandTuple[1]
 		unit = commandTuple[2]
-	
-		cmd = obd.commands[command]
-		response = self.obdConnection.query(cmd) # send the command, get the response
-		value = response.value
+		
+		if command == "MPG":
+			value = self.calcMPG()
+		else:
+			cmd = obd.commands[command]
+			response = self.obdConnection.query(cmd) # send the command, get the response
+			value = response.value
 			
 		if value == None:
 			value = '--'
@@ -145,6 +153,35 @@ class Page(threading.Thread):
 			lcd.lcdSetCursor(0,y)
 			print(output)
 			lcd.lcdWrite(output)
+			
+			
+	#calculates the current MPG, no running averages here
+	def calcMPG(self):
+		#current RPM
+		rpm = self.obdConnection.query(obd.commands.RPM)
+		rpm = rpm.value
+		
+		#manifold absolute pressure (my car doesn't have a MAF) in kpa
+		map = self.obdConnection.query(obd.commands.INTAKE_PRESSURE)
+		map = map.value
+		
+		#intake air temp, converted from celcius to kelvin
+		iat = self.obdConnection.query(obd.commands.INTAKE_TEMP) + 273
+		iat = iat.value
+		
+		#current speed in kph
+		speed = self.obdConnection.query(obd.commands.SPEED)
+		speed = speed.value
+		
+		#calculate the instantaneous manifold absolute pressure (????)
+		imap = rpm * map / iat
+		
+		#calcuate the "fake" maf
+		maf = (imap/120)*(self.volumetricEfficiency/100)*(self.engineDisplacement)*(28.97)/(8.314)
+		
+		#there you go
+		mpg = 7.107335 * speed / maf * self.mpgTrim
+		return mpg
 			
 			
 	def nextDataPage(self):
@@ -171,8 +208,19 @@ class Page(threading.Thread):
 		
 		for sensor in currentSubpage: 
 			#print(str(sensor[0]))
-			command = obd.commands[sensor[0]]
-			self.obdConnection.watch(command, callback=None, force=True)	
+			
+			if sensor[0] == "MPG":				#if there is a MPG section in this subpage
+			
+				#watch these pids too since they are needed for the MPG calculation
+				mpgCmds = ["RPM", "INTAKE_PRESSURE", "INTAKE_TEMP", "SPEED"]
+				
+				for cmd in mpgCmds:
+					command = obd.commands[cmd[0]]
+					self.obdConnection.watch(command, callback=None, force=True)
+
+			else:
+				command = obd.commands[sensor[0]]
+				self.obdConnection.watch(command, callback=None, force=True)	
 		
 		self.obdConnection.start()				#start the async
 		
