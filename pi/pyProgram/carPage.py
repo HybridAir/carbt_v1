@@ -11,8 +11,8 @@ import subprocess
 
 class Page(threading.Thread):
 	
-	subpage = ( [('COOLANT_TEMP', 'TMP', 'C') , ('RPM', '', ' RPM'),('MPG', '', ' MPG'), ('GEAR', 'GEAR', '')],
-		  [('COOLANT_TEMP', 'TMP', 'C') , ('COOLANT_TEMP', 'TMP', 'C'),('COOLANT_TEMP', 'TMP', 'C'), ('COOLANT_TEMP', 'TMP', 'C')],
+	subpage = ( [('COOLANT_TEMP', 'TMP', 'C') , ('RPM', '', ' RPM'),('MPG', '', ' MPG'), ('CURRENT_GEAR', 'GEAR', '')],
+		  [('VOLTAGE', '', 'V') , ('COOLANT_TEMP', 'TMP', 'C'),('COOLANT_TEMP', 'TMP', 'C'), ('COOLANT_TEMP', 'TMP', 'C')],
 		  [('ENGINE_LOAD', 'LOAD', '%') , ('SPEED', '', ' MPH'),('MPG', '', ' MPG'), ('THROTTLE_POS', 'THR', '%')],
 		  [('VOLTAGE', '', ' V') , ('FUEL_RATE', '', ' GPH'),('INTAKE_TEMP', 'INTMP', 'C'), ('', '', '')] )
 	
@@ -36,7 +36,6 @@ class Page(threading.Thread):
 		self.prevButton = None				
 		self.exitNow = False
 		self.btportBound = False
-		#self.btportBound = True
 		self.obdConnection = None
 		self.previouslyConnected = False
 		
@@ -59,23 +58,21 @@ class Page(threading.Thread):
 		#runs the page, call this continuously for smooth operation
 	def run(self):
 		while(1):
-			# if not self.btportBound:
-				# self.bindBtport()
-			if not self.obdConnection.is_connected():
-				if self.previouslyConnected:
-					self.previouslyConnected = False
+			# if not self.obdConnection.is_connected():
+				# if self.previouslyConnected:
+					# self.previouslyConnected = False
 					
-					lcd.lcdClear()
-					lcd.lcdSetCursor(0,0)
-					lcd.lcdWrite("  Reconnecting  ")
-					lcd.lcdSetCursor(0,1)
-					lcd.lcdWrite("to OBD Reader...")
-			else:
-				if self.previouslyConnected == False:
-					self.previouslyConnected = True
-					self.newSubpage()
-					
-				self.runSubpage()
+					# lcd.lcdClear()
+					# lcd.lcdSetCursor(0,0)
+					# lcd.lcdWrite("  Reconnecting  ")
+					# lcd.lcdSetCursor(0,1)
+					# lcd.lcdWrite("to OBD Reader...")
+			# else:
+			if self.previouslyConnected == False:
+				self.previouslyConnected = True
+				self.newSubpage()
+				
+			self.runSubpage()
 		
 			self.__processBtn(self.BtnMon.update())
 			if self.exitNow:
@@ -128,19 +125,6 @@ class Page(threading.Thread):
 		name = commandTuple[1]
 		unit = commandTuple[2]
 	
-		# if command == "GEAR":
-			# # self.obdConnection.port.send_and_parse("ATSH 6C10F1")
-			
-			# # command = obd.OBDCommand("GEAR", "Gear", "", "22199A01", 2, self.decodeGear)
-			# # response = self.obdConnection.query(command, True) # send the command, and parse the response
-			# pass
-		# elif command == "MPG":
-			# pass
-		# elif command == "VOLTAGE":
-			# pass
-		# elif command == "":
-			# pass
-		# else:
 		cmd = obd.commands[command]
 		response = self.obdConnection.query(cmd) # send the command, get the response
 		value = response.value
@@ -161,10 +145,6 @@ class Page(threading.Thread):
 			lcd.lcdSetCursor(0,y)
 			print(output)
 			lcd.lcdWrite(output)
-			
-			
-	# def decodeGear(self, _hex):
-		# return (_hex[3:], "current gear")
 			
 			
 	def nextDataPage(self):
