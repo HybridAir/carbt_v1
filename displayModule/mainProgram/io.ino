@@ -21,6 +21,9 @@ void ioInit() {
 	DDRB |= 0xFC;		//pb0 and pb1 are inputs, everything else are outputs
 	
 	//set default led brightness and stuff
+	
+	TCCR0A = (1<<COM0A1)|(1<<WGM00);  //pwm for pb2 oc0a
+	TCCR1A = (1<<COM1B1)|(1<<WGM10);  //pwm for pa5 oc1b
 }
 
 
