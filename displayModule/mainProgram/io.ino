@@ -10,19 +10,12 @@
 //or pb0, pb1, pb2, pa7
 
 void ioInit() {
-	//DDRB |= 0x03;		//set pb0 and pb1 as inputs
-	//DDRA |= 0x03;		//set pa0 and pa1 as inputs
-	//DDRA |= 0x80;
-	
-	//DDRA |= 0x08;
-	//DDRB |= 0x07;
-	
 	DDRA |= 0x77;		//pa3 and pa7 are inputs, everything else is output
 	DDRB |= 0xFC;		//pb0 and pb1 are inputs, everything else are outputs
 	
 	//set default led brightness and stuff
 	
-	TCCR0A = (1<<COM0A1)|(1<<WGM00);  //pwm for pb2 oc0a
+	//TCCR0A = (1<<COM0A1)|(1<<WGM00);  //pwm for pb2 oc0a			//this is for the red led, does not work for the peizo
 	TCCR1A = (1<<COM1B1)|(1<<WGM10);  //pwm for pa5 oc1b
 }
 
