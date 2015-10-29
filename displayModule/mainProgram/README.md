@@ -1,1 +1,1 @@
-All this stuff goes into the attiny44 in the display module
+Program that runs on the ATTINY44 in the Display Module. It handles all low-level hardware control to keep the program size low, so most of the logic is handled by the Pi.
