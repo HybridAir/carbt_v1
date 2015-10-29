@@ -1,4 +1,6 @@
 #define LED_PIN				OCR1B
+#define BUZZER0				PA2
+#define BUZZER1				PB2				
 #define BTN0				PB0
 #define BTN1				PB1
 #define BTN2				PA7
@@ -9,10 +11,12 @@
 
 void ioInit() {
 	//DDRA |= 0x77;		//pa3 and pa7 are inputs, everything else is output
-	DDRA &= ~((1<<BTN2)|(1<<BTN3));		//set PA3 and PA7 as inputs
+	DDRA &= ~((1<<BTN2)|(1<<BTN3));		//buttons 2 and 3 are inputs
+	DDRA |= (1<<BUZZER0);				//buzzer control 0 is an output
 	
 	//DDRB |= 0xFC;		//pb0 and pb1 are inputs, everything else are outputs
 	DDRB &= ~((1<<PB0)|(1<<PB1));		//set PB0 and PB1 as inputs
+	DDRB |= (1<<BUZZER1);				//buzzer control 1 is an output
 	
 	//TCCR0A = (1<<COM0A1)|(1<<WGM00);  //pwm for pb2 oc0a, just an extra pwm output if needed later
 	TCCR1A = (1<<COM1B1)|(1<<WGM10);  	//pwm for pa5 oc1b, the LCD backlight LED
@@ -22,8 +26,33 @@ void ioInit() {
 }
 
 
+//sets the backlight LED PWM brightness value, needs a value from 0 to 255
+//0 is basically off, 255 is max brightness
 void writeLED(uint8_t brightness) {
 	LED_PIN = brightness;
+}
+
+
+//makes the buzzer play a specific tone
+//0: off, 1: low, 2: med, 3: high
+void writeBuzzer(uint8_t tone) {
+	
+	if(tone == 1) {					//sets the buzzer to the low predefined tone, only pin 0 is on
+		PORTA |= (1<<BUZZER0);
+		PORTB &= ~(1<<BUZZER1);
+	}
+	else if(tone == 2) {			//sets the buzzer to the medium predefined tone, both pins are on
+		PORTA |= (1<<BUZZER0);
+		PORTB |= (1<<BUZZER1);
+	}
+	else if(tone == 3) {			//sets the buzzer to the high predefined tone, only pin 1 is on
+		PORTA &= ~(1<<BUZZER0);
+		PORTB |= (1<<BUZZER1);
+	}
+	else {							//failsafe in case we get a bad value (or a 0), just turns the buzzer off
+		PORTA &= ~(1<<BUZZER0);
+		PORTB &= ~(1<<BUZZER1);
+	}
 }
 
 
