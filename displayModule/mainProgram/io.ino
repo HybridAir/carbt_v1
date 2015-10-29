@@ -19,9 +19,6 @@ void ioInit() {
 	
 	//TCCR0A = (1<<COM0A1)|(1<<WGM00);  //pwm for pb2 oc0a, just an extra pwm output if needed later
 	TCCR1A = (1<<COM1B1)|(1<<WGM10);  	//pwm for pa5 oc1b, the LCD backlight LED
-	
-	//set default led brightness and stuff here
-	LED_PWM = 10;
 }
 
 
