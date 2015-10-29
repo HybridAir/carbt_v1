@@ -1,35 +1,37 @@
+#define LED_PIN				OCR1B
+#define BTN0				PB0
+#define BTN1				PB1
+#define BTN2				PA7
+#define BTN3				PA3
 
-//#define VOLTAGE				3.4				//input voltage
-
-#define LDR_PIN 			A3				//light dependant resistor pin
-#define TEMP_PIN 			A2				//tmp36 pin
-#define LED_PIN				5
 #define F_CPU 8000000UL
 
-//buttons are on attiny84 pins 10, 9, 8, 7
-//or pb0, pb1, pb2, pa7
 
 void ioInit() {
-	DDRA |= 0x77;		//pa3 and pa7 are inputs, everything else is output
-	DDRB |= 0xFC;		//pb0 and pb1 are inputs, everything else are outputs
+	//DDRA |= 0x77;		//pa3 and pa7 are inputs, everything else is output
+	DDRA &= ~((1<<BTN2)|(1<<BTN3));		//set PA3 and PA7 as inputs
 	
-	//set default led brightness and stuff
+	//DDRB |= 0xFC;		//pb0 and pb1 are inputs, everything else are outputs
+	DDRB &= ~((1<<PB0)|(1<<PB1));		//set PB0 and PB1 as inputs
 	
-	//TCCR0A = (1<<COM0A1)|(1<<WGM00);  //pwm for pb2 oc0a			//this is for the red led, does not work for the peizo
-	TCCR1A = (1<<COM1B1)|(1<<WGM10);  //pwm for pa5 oc1b
+	//TCCR0A = (1<<COM0A1)|(1<<WGM00);  //pwm for pb2 oc0a, just an extra pwm output if needed later
+	TCCR1A = (1<<COM1B1)|(1<<WGM10);  	//pwm for pa5 oc1b, the LCD backlight LED
+	
+	//set default led brightness and stuff here
+	LED_PIN = 10;
 }
 
 
 void writeLED(uint8_t brightness) {
-	//analogWrite(LED_PIN, brightness);
-	OCR1B = brightness;
+	LED_PIN = brightness;
 }
 
 
 //checks each button for any updates, run this very often
 void updateButtons() {
-	//uint8_t newBtn = (PINB & 0x07) | (PINA & 0x80);
-	uint8_t newBtn = (PINB & 0x03) | (PINA & 0x88);
+	//uint8_t newBtn = (PINB & 0x03) | (PINA & 0x88);
+	
+	uint8_t newBtn = (PINB & ((1<<PB0)|(1<<PB1))) | (PINA & ((1<<BTN2)|(1<<BTN3)));
 	
 	if(newBtn > 0) {
 		btnOut = newBtn;
@@ -49,23 +51,3 @@ void updateButtons() {
 	//then set it to the var
 	//the var needs to be 0 by default and after comms
 }
-
-
-//updates the ldr, and returns its reading
-/* int updateLDR() {
-	//analogRead(LDR_PIN);
-	//uint8_t ldrRead = map(analogRead(LDR_PIN), 0, 1023, 0, 255);
-	//return ldrRead;
-	return analogRead(LDR_PIN);
-} */
-
-//updates the tmp36, and returns its reading in Celsius
-/* int updateTemp() {
-	//analogRead(TEMP_PIN);
-/* 	float tempOut = analogRead(TEMP_PIN);
-	tempOut = tempOut * VOLTAGE;
-	tempOut = tempOut /= 1024.0; 
-	tempOut = (tempOut - 0.5) * 100;
-	//return (uint8_t)tempOut;
-	return analogRead(TEMP_PIN);
-} */

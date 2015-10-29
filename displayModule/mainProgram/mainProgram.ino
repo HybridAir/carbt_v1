@@ -1,6 +1,4 @@
 #include "TinySerial.h"
-//#include <Bounce2.h>
-//#include <SoftwareSerial.h>
 #include <TinyWireM.h> 
 #include <ST7032.h>
 
@@ -49,14 +47,7 @@ void setup() {
 	ioInit();
 	commsInit();
 	
-	//red led pwm on pb2 oc0a
-	//TCCR0A = (1<<COM0A1)|(1<<WGM00);  // mode #1
-	//TCCR0B = (2<<CS00);  // div8
-	//OCR0A = 0;				//highest freq 3230
 	
-	//lcd led on pa5 oc1b
-	//TCCR1A = (1<<COM1B1)|(1<<WGM10);  // mode #1
-	OCR1B = 10;
 	
 	PORTA |= (1<<PA2);
 	delay(125);
