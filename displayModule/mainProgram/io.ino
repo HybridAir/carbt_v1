@@ -1,4 +1,5 @@
-#define LED_PIN				OCR1B
+#define LED_PIN				PA5
+#define LED_PWM				OCR1B
 #define BUZZER0				PA2
 #define BUZZER1				PB2				
 #define BTN0				PB0
@@ -10,11 +11,9 @@
 
 
 void ioInit() {
-	//DDRA |= 0x77;		//pa3 and pa7 are inputs, everything else is output
 	DDRA &= ~((1<<BTN2)|(1<<BTN3));		//buttons 2 and 3 are inputs
-	DDRA |= (1<<BUZZER0);				//buzzer control 0 is an output
+	DDRA |= ((1<<BUZZER0)|(1<<LED_PIN));	//buzzer control 0 and LED pwn pin are outputs
 	
-	//DDRB |= 0xFC;		//pb0 and pb1 are inputs, everything else are outputs
 	DDRB &= ~((1<<PB0)|(1<<PB1));		//set PB0 and PB1 as inputs
 	DDRB |= (1<<BUZZER1);				//buzzer control 1 is an output
 	
@@ -22,14 +21,14 @@ void ioInit() {
 	TCCR1A = (1<<COM1B1)|(1<<WGM10);  	//pwm for pa5 oc1b, the LCD backlight LED
 	
 	//set default led brightness and stuff here
-	LED_PIN = 10;
+	LED_PWM = 10;
 }
 
 
 //sets the backlight LED PWM brightness value, needs a value from 0 to 255
 //0 is basically off, 255 is max brightness
 void writeLED(uint8_t brightness) {
-	LED_PIN = brightness;
+	LED_PWM = brightness;
 }
 
 

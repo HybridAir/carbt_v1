@@ -47,15 +47,17 @@ void setup() {
 	ioInit();
 	commsInit();
 	
+	// writeBuzzer(1);
+	// delay(125);
+	// writeBuzzer(0);
 	
-	
-	PORTA |= (1<<PA2);
-	delay(125);
-	PORTB |= (1<<PB2);
-	delay(125);
-	PORTA &= ~(1<<PA2);
-	delay(125);
-	PORTB &= ~(1<<PB2);
+	// PORTA |= (1<<PA2);
+	// delay(125);
+	// PORTB |= (1<<PB2);
+	// delay(125);
+	// PORTA &= ~(1<<PA2);
+	// delay(125);
+	// PORTB &= ~(1<<PB2);
 	
 }
  
