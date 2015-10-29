@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #handles the car data page, displays various stats read from an obd2 scanner
 
-#TODO: CANT EXIT OUT WHEN CONNECTING
+#TODO: custom units (mph/kph, c/f etc)
 
 import dispMod as lcd
 import time
@@ -11,10 +11,10 @@ import subprocess
 
 class Page(threading.Thread):
 	
-	subpage = ( [('COOLANT_TEMP', 'TMP', 'C') , ('RPM', '', ' RPM'),('MPG', '', ' MPG'), ('CURRENT_GEAR', 'GEAR', '')],
-		  [('VOLTAGE', '', 'V') , ('COOLANT_TEMP', 'TMP', 'C'),('COOLANT_TEMP', 'TMP', 'C'), ('COOLANT_TEMP', 'TMP', 'C')],
+	subpage = ( [('INTAKE_TEMP', 'IAT', '') , ('RPM', '', ' RPM'),('INTAKE_PRESSURE', 'MAP', ' '), ('SPEED', '', 'KPH')],
+		  [('MPG', '', 'MPG') , ('COOLANT_TEMP', 'TMP', 'C'),('COOLANT_TEMP', 'TMP', 'C'), ('COOLANT_TEMP', 'TMP', 'C')],
 		  [('ENGINE_LOAD', 'LOAD', '%') , ('SPEED', '', ' MPH'),('MPG', '', ' MPG'), ('THROTTLE_POS', 'THR', '%')],
-		  [('VOLTAGE', '', ' V') , ('FUEL_RATE', '', ' GPH'),('INTAKE_TEMP', 'INTMP', 'C'), ('', '', '')] )
+		  [('VOLTAGE', '', ' V') , ('COOLANT_TEMP', 'TMP', ' C'),('INTAKE_TEMP', 'IAT', 'C'), ('COOLANT_TEMP', 'TMP', 'C')] )
 	
 	subpageIndex = 1								#default and current subpage
 	
@@ -26,7 +26,7 @@ class Page(threading.Thread):
 	scrollSpeed = .15
 	
 	#car specific values needed for MPG calculation
-	volumetricEfficiency = 85		#percentage
+	volumetricEfficiency = 85.0		#percentage
 	engineDisplacement = 2.4 		#in liters
 	mpgTrim = .91					#becuase I was still getting the wrong MPG
 	
@@ -63,21 +63,21 @@ class Page(threading.Thread):
 		#runs the page, call this continuously for smooth operation
 	def run(self):
 		while(1):
-			# if not self.obdConnection.is_connected():
-				# if self.previouslyConnected:
-					# self.previouslyConnected = False
+			if not self.obdConnection.is_connected():
+				if self.previouslyConnected:
+					self.previouslyConnected = False
 					
-					# lcd.lcdClear()
-					# lcd.lcdSetCursor(0,0)
-					# lcd.lcdWrite("  Reconnecting  ")
-					# lcd.lcdSetCursor(0,1)
-					# lcd.lcdWrite("to OBD Reader...")
-			# else:
-			if self.previouslyConnected == False:
-				self.previouslyConnected = True
-				self.newSubpage()
-				
-			self.runSubpage()
+					lcd.lcdClear()
+					lcd.lcdSetCursor(0,0)
+					lcd.lcdWrite("  Reconnecting  ")
+					lcd.lcdSetCursor(0,1)
+					lcd.lcdWrite("to OBD Reader...")
+			else:
+				if self.previouslyConnected == False:
+						self.previouslyConnected = True
+						self.newSubpage()
+					
+				self.runSubpage()
 		
 			self.__processBtn(self.BtnMon.update())
 			if self.exitNow:
@@ -166,22 +166,26 @@ class Page(threading.Thread):
 		map = map.value
 		
 		#intake air temp, converted from celcius to kelvin
-		iat = self.obdConnection.query(obd.commands.INTAKE_TEMP) + 273
+		iat = self.obdConnection.query(obd.commands.INTAKE_TEMP)
 		iat = iat.value
 		
 		#current speed in kph
 		speed = self.obdConnection.query(obd.commands.SPEED)
 		speed = speed.value
 		
-		#calculate the instantaneous manifold absolute pressure (????)
-		imap = rpm * map / iat
+		mpg = 0
 		
-		#calcuate the "fake" maf
-		maf = (imap/120)*(self.volumetricEfficiency/100)*(self.engineDisplacement)*(28.97)/(8.314)
-		
-		#there you go
-		mpg = 7.107335 * speed / maf * self.mpgTrim
-		return mpg
+		if rpm != None and map != None and iat != None and speed != None:
+			#calculate the instantaneous manifold absolute pressure (????)
+			imap = rpm * map / (iat + 273)
+			
+			#calcuate the "fake" maf
+			maf = (imap/120)*(self.volumetricEfficiency/100)*(self.engineDisplacement)*(28.97)/(8.314)
+			
+			if maf != 0:
+				mpg = 7.107335 * speed / maf * self.mpgTrim
+			
+		return "{0:.1f}".format(mpg)
 			
 			
 	def nextDataPage(self):
@@ -215,7 +219,7 @@ class Page(threading.Thread):
 				mpgCmds = ["RPM", "INTAKE_PRESSURE", "INTAKE_TEMP", "SPEED"]
 				
 				for cmd in mpgCmds:
-					command = obd.commands[cmd[0]]
+					command = obd.commands[cmd]
 					self.obdConnection.watch(command, callback=None, force=True)
 
 			else:

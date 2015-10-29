@@ -7,6 +7,8 @@
 import dispMod as lcd
 import time
 import threading
+import os
+import sys
 
 class Page(threading.Thread):
 
@@ -18,6 +20,9 @@ class Page(threading.Thread):
 
 	#runs the page, call this continuously for smooth operation
 	def run(self):
-		time.sleep(5)
-		print("returning")
+		lcd.lcdClear()
+		lcd.lcdSetCursor(0,0)
+		lcd.lcdWrite("   shutdown   ")
+		os.system("sudo shutdown -h now")
+		sys.exit()
 		return
