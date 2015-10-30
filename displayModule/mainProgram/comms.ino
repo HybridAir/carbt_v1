@@ -2,8 +2,7 @@
 
 //communications registers
 #define BTN_READ_REG		0x01
-//#define LDR_READ_REG 		0x02
-//#define TEMP_READ_REG 		0x03
+#define BUZZER_WRITE_REG	0x02
 #define LED_WRITE_REG 		0x04
 #define CONTRAST_WRITE_REG	0x05
 #define CURSOR_WRITE_REG 	0x06
@@ -51,22 +50,8 @@ void checkCommand() {
 					softSerialWrite(btnOut);
 					btnOut = 0x00;						//reset the button variable
 					break;
-/* 				case LDR_READ_REG:						//LDR value request
-					// mySerial.write(updateLDR());		//send the current light level
-					ldrOut = updateLDR();
-					// mySerial.write(lowByte(ldrOut));
-					// mySerial.write(highByte(ldrOut));
-					softSerialWrite(lowByte(ldrOut));
-					softSerialWrite(highByte(ldrOut));
-					break; */
-/* 				case TEMP_READ_REG:
-					//mySerial.write(updateTemp());
-					tempOut = updateTemp();
-					//mySerial.write(lowByte(tempOut));
-					//mySerial.write(highByte(tempOut));
-					softSerialWrite(lowByte(tempOut));
-					softSerialWrite(highByte(tempOut));
-					break; */
+				case BUZZER_WRITE_REG:
+					dataWriteFlag = BUZZER_WRITE_REG;
 				case LED_WRITE_REG:
 					dataWriteFlag = LED_WRITE_REG;		//we are now waiting for ledwrite data from the pi
 					break;
@@ -98,6 +83,9 @@ void checkData() {
 			byte data = softSerialRead();
 			//byte data = mySerial.read();
 			switch (dataWriteFlag) {
+				case BUZZER_WRITE_REG:
+					setBuzzer(data);
+					break;
 				case LED_WRITE_REG:			//if we were waiting for led brightness data
 					writeLED(data);			//send the data to the led
 					break;

@@ -21,17 +21,18 @@ const byte right1[] = {0x0, 0x0, 0x10, 0x18, 0x1c, 0x1e, 0xf, 0x0};
 const char row0[] = "carbt_v1";
 const char row1[] = "starting";
 
-
 volatile char *inbuf[32];
-// outgoing buffer
 volatile char *outbuf[32];
 
 ST7032 lcd;
 
-
 uint8_t btnOut = 0x00;
-//byte prevBtn = 0;
 bool lcdWrite = false;
+uint8_t buzzerTone = 0;
+uint8_t buzzerDuration = 0;
+bool buzzerStartFlag = false;
+bool buzzerRunning = false;
+unsigned long buzzerStartTime = 0;
 	
  
 void setup() {
@@ -47,6 +48,7 @@ void loop() {
 	checkData();
 	updateButtons();
 	updateLcd();
+	checkBuzzer();
 }
 
 

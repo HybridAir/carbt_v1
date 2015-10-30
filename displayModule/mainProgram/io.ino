@@ -29,6 +29,44 @@ void writeLED(uint8_t brightness) {
 }
 
 
+//extracts the data recieved from the Pi, and sets the buzzer accordingly
+void setBuzzer(uint8_t dataIn) {
+	uint8_t mode = (dataIn & 0x80) >> 7;
+	uint8_t tone = (dataIn & 0x60) >> 5;
+	uint8_t duration = (dataIn & 0x1F);
+	
+	//check the buzzer operation mode first
+	if(mode == 0) {									//sets the buzzer indefinitely (pi handles the duration)
+		writeBuzzer(tone);							//writes the specified buzzer tone
+		buzzerStartFlag = false;					//make sure these two vars are false, in case the Pi tried force stopping the buzzer
+		buzzerRunning = false;
+	}
+	else {											//sets the buzzer for a specific duration handled by us
+		buzzerTone = tone;
+		buzzerDuration = duration;
+		buzzerStartFlag = true;						//we got all the data out that we need, so start the buzzer now
+	}
+}
+
+
+//runs the buzzer for a specified amount of time, call this continuously for good operation
+void checkBuzzer() {
+	if(buzzerStartFlag == true) {				//if the buzzer needs to be started
+		buzzerStartFlag = false;				//we now know to get it going
+		buzzerRunning = true;					//yeah
+		buzzerStartTime = millis();				//get the current time, which is the time we started the buzzer
+		writeBuzzer(buzzerTone);				//start the buzzer with the specified tone value
+	}
+	
+	if(buzzerRunning == true) {					//if the buzzer should be running right now
+		if((buzzerStartTime + millis()) >= buzzerDuration) {		//if it's time for the buzzer to stop running
+			writeBuzzer(0);						//stop the buzzer now
+			buzzerRunning = false;				//yep
+		}
+	}
+}
+
+
 //makes the buzzer play a specific tone
 //0: off, 1: low, 2: med, 3: high
 void writeBuzzer(uint8_t tone) {
