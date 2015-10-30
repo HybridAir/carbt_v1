@@ -9,24 +9,18 @@
 #define START_LCD_REG		0x07
 #define STOP_LCD_REG		0x08
 #define CLEAR_LCD_REG		0x09
+#define KEEPALIVE			0x0A
 
 
 bool newWrite = false;				//newWrite flag
+
 uint8_t currentReg = 0x00;			//current selected register
 uint8_t currentData = 0x00;			//data that needs to be processed
 
 uint8_t dataWriteFlag = 0x00;
 
 
-void commsInit() {
-	//mySerial.begin(4800);
-	//softSerialInit(DDRA,PORTA,PINA,PA0,PA1);
-
-					 
-					 
-
-					 
-					 
+void commsInit() {		 
 	softSerialBegin(4800);
 	//softSerialWrite('0');
 	//mySerial.write('0');
@@ -40,6 +34,8 @@ void checkCommand() {
 		//check if the pi sent any commands
 		//if(mySerial.available() > 0) {					//if the pi sent us something
 		if(softSerialAvailable() > 0) {
+			hostIsAlive = true;
+			previouslyConnected = true;
 			//byte command = mySerial.read();				//read the data out of the buffer
 			byte command = softSerialRead();
 			int tempOut;
@@ -68,6 +64,8 @@ void checkCommand() {
 				case CLEAR_LCD_REG:
 					lcd.clear();
 					break;
+				case KEEPALIVE:
+					keepAlive = true;
 				default:
 					break;
 			}

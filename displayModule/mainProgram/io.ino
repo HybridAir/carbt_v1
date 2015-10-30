@@ -33,7 +33,14 @@ void writeLED(uint8_t brightness) {
 void setBuzzer(uint8_t dataIn) {
 	uint8_t mode = (dataIn & 0x80) >> 7;
 	uint8_t tone = (dataIn & 0x60) >> 5;
-	uint8_t duration = (dataIn & 0x1F);
+	uint8_t duration = (dataIn & 0x1F) * 50;
+	
+	// for(char i = 0; i <= (dataIn & 0x1F); i++) {
+		// writeBuzzer(1);
+		// delay(100);
+		// writeBuzzer(0);
+		// delay(100);
+	// }
 	
 	//check the buzzer operation mode first
 	if(mode == 0) {									//sets the buzzer indefinitely (pi handles the duration)
@@ -59,7 +66,7 @@ void checkBuzzer() {
 	}
 	
 	if(buzzerRunning == true) {					//if the buzzer should be running right now
-		if((buzzerStartTime + millis()) >= buzzerDuration) {		//if it's time for the buzzer to stop running
+		if((buzzerStartTime + buzzerDuration) <= millis()) {		//if it's time for the buzzer to stop running
 			writeBuzzer(0);						//stop the buzzer now
 			buzzerRunning = false;				//yep
 		}
